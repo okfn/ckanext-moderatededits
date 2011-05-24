@@ -1,0 +1,9 @@
+syntax: glob
+
+*.pyc
+*.swp
+*.egg-info/*
+.DS_Store
+test.db
+data
+screenshots
