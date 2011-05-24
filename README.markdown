@@ -4,7 +4,7 @@ CKAN Moderated Edits Extension
 The moderated edits extension for CKAN adds the ability for all updates
 to CKAN packages to be moderated.
 
-**Current Status:** Alpha
+**Current Status:** Incomplete
 
 Installation and Activation
 ---------------------------
