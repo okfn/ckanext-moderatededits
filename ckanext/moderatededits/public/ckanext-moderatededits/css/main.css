@@ -1,1 +1,13 @@
 /* Main CSS for Moderated Edits Extension */
+#revision-info { 
+    margin-bottom: 2em; 
+    border: 1px solid #e7e7e7;
+}
+#revision-info h3 {
+    padding: 10px;
+    border-bottom: 1px solid #e7e7e7;
+}
+.revision-info-item {
+    display: block;
+    padding: 10px;
+}

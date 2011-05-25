@@ -72,4 +72,22 @@ class ModeratedEditsPlugin(SingletonPlugin):
         Required to implement IGenshiStreamFilter.
         """
         routes = request.environ.get('pylons.routes_dict')
+
+        # if this is the edit action of a package, call the javascript init function
+        if(routes.get('controller') == 'package' and
+           routes.get('action') == 'edit' and 
+           c.pkg.id):
+            # TODO: find out if the current user is a moderator
+            data = {'package_name': c.pkg.name,
+                    'is_moderator': True}
+            # add CSS style
+            stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
+            # add javascript links
+            stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
+            # add revision info box
+            stream = stream | Transformer('body//div[@class="package"]//h2')\
+                .after(HTML(html.REVISION_INFO_CODE))
+            # add revision list widget
+            stream = stream | Transformer('body//div[@id="primary"]')\
+                .append(HTML(html.REVISION_LIST_CODE))
         return stream
