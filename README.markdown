@@ -26,6 +26,7 @@ Todo / Roadmap
 
 * Fix style for revision list so that it is correctly aligned with the package edit form.
 * Localise displayed dates.
+* Show moderator help box for 'click here to find out what this means' link on package edit pages.
 
 Tests
 -----
