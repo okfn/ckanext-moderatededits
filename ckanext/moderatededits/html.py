@@ -10,7 +10,8 @@ BODY_CODE = """
 <script type="text/javascript" src="/ckanext-moderatededits/moderatededits.js"></script>
 <script type="text/javascript">
     $('document').ready(function($){
-        CKANEXT.MODERATEDEDITS.init('%(package_name)s', '%(is_moderator)s');
+        CKANEXT.MODERATEDEDITS.init('%(package_name)s', '%(revision_list_url)s', 
+                                    '%(is_moderator)s');
     });
 </script>
 """
