@@ -21,6 +21,12 @@ able to add the following to your CKAN .ini file:
 After you clear your cache and reload the site, the Moderated Edits plugin
 and should be available. 
 
+Todo / Roadmap
+--------------
+
+* Fix style for revision list so that it is correctly aligned with the package edit form.
+* Localise displayed dates.
+
 Tests
 -----
 From the ckanext-moderatededits directory, run:
