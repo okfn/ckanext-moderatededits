@@ -77,11 +77,9 @@ class ModeratedEditsPlugin(SingletonPlugin):
         if(routes.get('controller') == 'package' and
            routes.get('action') == 'edit' and 
            c.pkg.id):
-            # TODO: find out if the current user is a moderator
             data = {'package_name': c.pkg.name,
                     'revision_list_url': h.url_for(controller='package', action='history_ajax',
-                                                   id=c.pkg.id),
-                    'is_moderator': True}
+                                                   id=c.pkg.id)}
             # add CSS style
             stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
             # add javascript links

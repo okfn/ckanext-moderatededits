@@ -3,39 +3,99 @@
 var CKANEXT = CKANEXT || {};
 
 CKANEXT.MODERATEDEDITS = {
-    init:function(packageName, revisionListURL, isModerator){
+    init:function(packageName, revisionListURL){
         this.packageName = packageName;
         this.revisionListURL = revisionListURL;
-        this.isModerator = isModerator;
 
+        // find out if the current user is a moderator by looking for the
+        // option to change the package state
+        this.isModerator = $('#state').length > 0;
+
+        // enable the sidebar which is where the revision list goes by default
         $('body').removeClass("hide-sidebar");
+
+        // default active revision is the latest one
         this.activeRevision = 0;
-        this.revisionInfo();
+        this.activeRevisionID = null;
+        this.activeRevisionMsg = null;
+        this.revisions = null;
+        this.lastApproved = 0;
+
+        // display revision info box and list
         this.revisionList();
+    },
+
+    // if the active revision is not approved,
+    // return the index of the latest approved revision for this package
+    //
+    // if active revision is approved, or there are no other (approved) revisions,
+    // return the active revision index.
+    lastApprovedRevision:function(){
+        var lastApproved = CKANEXT.MODERATEDEDITS.activeRevision;
+
+        console.log(CKANEXT.MODERATEDEDITS.revisions);
+        if(CKANEXT.MODERATEDEDITS.revisions && 
+           CKANEXT.MODERATEDEDITS.revisions.length > 0){
+            if(!this.revisions[CKANEXT.MODERATEDEDITS.activeRevision].current_approved){
+                // get the latest approved revision
+                for(var i in CKANEXT.MODERATEDEDITS.revisions){
+                    if(CKANEXT.MODERATEDEDITS.revisions[i].current_approved){
+                        lastApproved = i;
+                    }
+                }
+            }
+        }
+        
+        return lastApproved;
     },
 
     // display the revision information box
     revisionInfo:function(){
         var html = '';
         if(this.isModerator){
-            html += '<span class="revision-info-item">';
-            html += 'You are a moderator for this package. ';
-            html += '<a href="">Click here to find out what this means.</a>';
-            html += '</span>';
+            html += '<span class="revision-info-item">' +
+                    'You are a moderator for this package. ' +
+                    '<a href="">Click here to find out what this means.</a>' +
+                    '</span>';
         }
-        html += '<span class="revision-info-item">';
-        html += 'Your changes are being compared to an unmoderated revision. ';
-        html += '<a href="">Click here to compare them to the latest moderated revision.</a>';
-        html += '</span>';
-        $('div#revision-info').empty().append(html);
+        this.lastApproved = this.lastApprovedRevision()
+        if(this.activeRevision != this.lastApproved){
+            html += '<span class="revision-info-item">' +
+                    'Your changes are being compared to an unmoderated revision. ' +
+                    '<a id="revision-select-latest">Click here to compare them ' +
+                    'to the latest moderated revision.</a>' +
+                    '</span>';
+        }
+
+        if(html.length > 0){
+            $('div#revision-info').empty().append(html);
+            $('a#revision-select-latest').click(CKANEXT.MODERATEDEDITS.latestApprovedClicked);
+            $('div#revision-info').fadeIn(250);
+        }
+        else{
+            $('div#revision-info').fadeOut(250);
+        }
     },
 
     // change revision
-    changeRevision:function(){
-        alert('change revision');
+    changeRevision:function(index){
+        CKANEXT.MODERATEDEDITS.activeRevision = index;
+        CKANEXT.MODERATEDEDITS.revisionInfo();
+        CKANEXT.MODERATEDEDITS.revisionList();
     },
 
-    // display the revision list
+    latestApprovedClicked:function(){
+        CKANEXT.MODERATEDEDITS.changeRevision(CKANEXT.MODERATEDEDITS.lastApproved);
+    },
+
+    // callback handler for links in revision list (select revisions)
+    revisionClicked:function(e){
+        CKANEXT.MODERATEDEDITS.changeRevision($(e.target).attr('id').substr("revision-".length));
+    },
+
+    // * display the revision list
+    // * save the list of revisions for this package to this.revisions
+    // * save the revision ID and log message for the current active revision
     revisionList:function(){
         var success = function(response){
             if(response.length == 0){
@@ -55,6 +115,9 @@ CKANEXT.MODERATEDEDITS = {
                     // set active/inactive classes
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
                         html += 'revision-active';
+                        // save the revision ID and log message
+                        CKANEXT.MODERATEDEDITS.activeRevisionID = response[i].revision_id;
+                        CKANEXT.MODERATEDEDITS.activeRevisionMsg = response[i].message;
                     }
                     else{
                         html += 'revision-inactive';
@@ -86,7 +149,11 @@ CKANEXT.MODERATEDEDITS = {
             $('#revision-list').empty().append(html);
 
             // add a click handlers for revision list URLs
-            $('a.revision-list-button').click(CKANEXT.MODERATEDEDITS.changeRevision);
+            $('a.revision-list-button').click(CKANEXT.MODERATEDEDITS.revisionClicked);
+
+            // update the revision info box
+            CKANEXT.MODERATEDEDITS.revisions = response;
+            CKANEXT.MODERATEDEDITS.revisionInfo();
         };
 
         var error = function(response){

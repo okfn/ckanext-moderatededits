@@ -1,9 +1,17 @@
 /* Main CSS for Moderated Edits Extension */
 
-/* Info box */
-#revision-info { 
+/* general style of revision boxes */
+.revision-box {
     margin-bottom: 2em; 
     border: 1px solid #e7e7e7;
+}
+.revision-box a { 
+    cursor: pointer;
+}
+
+/* Info box */
+#revision-info {
+    display: none;
 }
 #revision-info h3 {
     padding: 10px;
@@ -16,9 +24,7 @@
 
 /* Revisions list */
 #revision-list-widget {
-    border: 1px solid #e7e7e7;
     padding: 10px;
-    margin-top: 4em;
 }
 #revision-list-widget div { 
     margin-top: 2em; 
@@ -26,9 +32,6 @@
 #revision-list-widget h3 {
     color: #000;
     margin-bottom: 1em;
-}
-#revision-list a { 
-    cursor: pointer;
 }
 li.revision-approved:before {
     content: "* ";

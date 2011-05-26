@@ -21,6 +21,8 @@ able to add the following to your CKAN .ini file:
 After you clear your cache and reload the site, the Moderated Edits plugin
 and should be available. 
 
+**Note:** Currently requires CKAN branch feature-1141-moderated-edits-ajax
+
 Todo / Roadmap
 --------------
 
