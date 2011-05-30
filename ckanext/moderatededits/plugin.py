@@ -79,7 +79,8 @@ class ModeratedEditsPlugin(SingletonPlugin):
            c.pkg.id):
             data = {'package_name': c.pkg.name,
                     'revision_list_url': h.url_for(controller='package', action='history_ajax',
-                                                   id=c.pkg.id)}
+                                                   id=c.pkg.id),
+                    'revision_data_url': h.url_for(controller='package', action='read_ajax')}
             # add CSS style
             stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
             # add javascript links

@@ -5,14 +5,10 @@
     margin-bottom: 2em; 
     border: 1px solid #e7e7e7;
 }
-.revision-box a { 
-    cursor: pointer;
-}
+.revision-box a { cursor: pointer; }
 
 /* Info box */
-#revision-info {
-    display: none;
-}
+#revision-info { display: none; }
 #revision-info h3 {
     padding: 10px;
     border-bottom: 1px solid #e7e7e7;
@@ -23,12 +19,8 @@
 }
 
 /* Revisions list */
-#revision-list-widget {
-    padding: 10px;
-}
-#revision-list-widget div { 
-    margin-top: 2em; 
-}
+#revision-list-widget { padding: 10px; }
+#revision-list-widget div { margin-top: 2em; }
 #revision-list-widget h3 {
     color: #000;
     margin-bottom: 1em;
@@ -37,15 +29,11 @@ li.revision-approved:before {
     content: "* ";
     color: #b00;
 }
-.revision-active {
-    border: 1px solid #04ae0d;
-}
-li.revision-approved {
-    padding: 10px 15px 10px 5px;
-}
-li.revision-not-approved {
-    padding: 10px 15px 10px 15px;
-}
-.revision-approved-marker {
-    color: #b00;
-}
+.revision-active { border: 1px solid #04ae0d; }
+li.revision-approved { padding: 10px 15px 10px 5px; }
+li.revision-not-approved { padding: 10px 15px 10px 15px; }
+.revision-approved-marker { color: #b00; }
+
+/* Edit form */
+#package-edit input, textarea, select { outline: none; }
+#package-edit .revision-match { border: 1px solid #04ae0d; }

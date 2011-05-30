@@ -3,9 +3,10 @@
 var CKANEXT = CKANEXT || {};
 
 CKANEXT.MODERATEDEDITS = {
-    init:function(packageName, revisionListURL){
+    init:function(packageName, revisionListURL, revisionDataURL){
         this.packageName = packageName;
         this.revisionListURL = revisionListURL;
+        this.revisionDataURL = revisionDataURL;
 
         // find out if the current user is a moderator by looking for the
         // option to change the package state
@@ -23,6 +24,9 @@ CKANEXT.MODERATEDEDITS = {
 
         // display revision info box and list
         this.revisionList();
+
+        // TODO: display revision log message
+        // TODO: buttons
     },
 
     // if the active revision is not approved,
@@ -33,7 +37,6 @@ CKANEXT.MODERATEDEDITS = {
     lastApprovedRevision:function(){
         var lastApproved = CKANEXT.MODERATEDEDITS.activeRevision;
 
-        console.log(CKANEXT.MODERATEDEDITS.revisions);
         if(CKANEXT.MODERATEDEDITS.revisions && 
            CKANEXT.MODERATEDEDITS.revisions.length > 0){
             if(!this.revisions[CKANEXT.MODERATEDEDITS.activeRevision].current_approved){
@@ -93,9 +96,9 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.changeRevision($(e.target).attr('id').substr("revision-".length));
     },
 
-    // * display the revision list
-    // * save the list of revisions for this package to this.revisions
-    // * save the revision ID and log message for the current active revision
+    // display the revision list
+    // save the list of revisions for this package to this.revisions
+    // save the revision ID and log message for the current active revision
     revisionList:function(){
         var success = function(response){
             if(response.length == 0){
@@ -154,6 +157,9 @@ CKANEXT.MODERATEDEDITS = {
             // update the revision info box
             CKANEXT.MODERATEDEDITS.revisions = response;
             CKANEXT.MODERATEDEDITS.revisionInfo();
+
+            // update the shadow field values
+            CKANEXT.MODERATEDEDITS.updateShadows();
         };
 
         var error = function(response){
@@ -166,5 +172,42 @@ CKANEXT.MODERATEDEDITS = {
                 success: success,
                 error: error
         }); 
+    },
+    
+    // update the values of the shadow fields to those of the active revision
+    updateShadows:function(){
+        var success = function(data){
+            CKANEXT.MODERATEDEDITS.shadows = data;
+            CKANEXT.MODERATEDEDITS.showMatchesAndShadows();
+        };
+
+        $.ajax({method: 'GET',
+                url: this.revisionDataURL + "/" + this.activeRevisionID,
+                dataType: 'json',
+                success: success
+        }); 
+    },
+
+    // returns true if the value of a matches the value of b
+    doesMatch:function(a, b){
+        return a === b;
+    },
+
+    // show matching fields (have the 'revision-match' class), or shadow fields
+    // if the current field differs from the active revision
+    showMatchesAndShadows:function(){
+        var formInputs = $('#package-edit input[type=text], select, textarea');
+
+        $.each(formInputs, function(index, value){
+            var inputValue = $(value).val();
+            var revisionValue = CKANEXT.MODERATEDEDITS.shadows[$(value).attr("name")];
+
+            if(CKANEXT.MODERATEDEDITS.doesMatch(inputValue, revisionValue)){
+                $(value).addClass("revision-match");
+            }
+            else{
+                $(value).removeClass("revision-match");
+            }
+        });
     }
 };
