@@ -15,6 +15,10 @@ CKANEXT.MODERATEDEDITS = {
         // enable the sidebar which is where the revision list goes by default
         $('body').removeClass("hide-sidebar");
 
+        // add empty shadow divs that will be filled later if necessary
+        this.formInputs = $('#package-edit input[type=text], select, textarea');
+        this.formInputs.after('<div class="shadow"></div>');
+
         // default active revision is the latest one
         this.activeRevision = 0;
         this.activeRevisionID = null;
@@ -188,25 +192,30 @@ CKANEXT.MODERATEDEDITS = {
         }); 
     },
 
-    // returns true if the value of a matches the value of b
+    // returns true if the value of a matches the value of b, or if b is undefined
     doesMatch:function(a, b){
-        return a === b;
+        if((a === b) || (typeof b === "undefined")){
+            return true;
+        }
+        return false;
     },
 
     // show matching fields (have the 'revision-match' class), or shadow fields
     // if the current field differs from the active revision
     showMatchesAndShadows:function(){
-        var formInputs = $('#package-edit input[type=text], select, textarea');
-
-        $.each(formInputs, function(index, value){
+        $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
             var inputValue = $(value).val();
             var revisionValue = CKANEXT.MODERATEDEDITS.shadows[$(value).attr("name")];
 
             if(CKANEXT.MODERATEDEDITS.doesMatch(inputValue, revisionValue)){
+                // fields match, so just set css style
                 $(value).addClass("revision-match");
+                $(value).next("div").fadeOut(500);
             }
             else{
+                // fields don't match - display shadow
                 $(value).removeClass("revision-match");
+                $(value).next("div").empty().append(revisionValue).fadeIn(500);
             }
         });
     }
