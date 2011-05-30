@@ -29,8 +29,14 @@ CKANEXT.MODERATEDEDITS = {
         // display revision info box and list
         this.revisionList();
 
+        // add click handler for 'select latest revision' link in info box
+        $('a#revision-select-latest').click(CKANEXT.MODERATEDEDITS.latestApprovedClicked);
+
         // TODO: display revision log message
         // TODO: buttons
+
+        // set speed for JQuery fades (in milliseconds)
+        this.fadeTime = 500;
     },
 
     // if the active revision is not approved,
@@ -58,29 +64,27 @@ CKANEXT.MODERATEDEDITS = {
 
     // display the revision information box
     revisionInfo:function(){
-        var html = '';
         if(this.isModerator){
-            html += '<span class="revision-info-item">' +
-                    'You are a moderator for this package. ' +
-                    '<a href="">Click here to find out what this means.</a>' +
-                    '</span>';
-        }
-        this.lastApproved = this.lastApprovedRevision()
-        if(this.activeRevision != this.lastApproved){
-            html += '<span class="revision-info-item">' +
-                    'Your changes are being compared to an unmoderated revision. ' +
-                    '<a id="revision-select-latest">Click here to compare them ' +
-                    'to the latest moderated revision.</a>' +
-                    '</span>';
-        }
-
-        if(html.length > 0){
-            $('div#revision-info').empty().append(html);
-            $('a#revision-select-latest').click(CKANEXT.MODERATEDEDITS.latestApprovedClicked);
-            $('div#revision-info').fadeIn(250);
+            $('#revision-info-moderator').fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
         }
         else{
-            $('div#revision-info').fadeOut(250);
+            $('#revision-info-moderator').fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+
+        this.lastApproved = this.lastApprovedRevision()
+        if(this.activeRevision != this.lastApproved){
+            $('#revision-info-link-to-latest').fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+        else{
+            $('#revision-info-link-to-latest').fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+
+        // test for both to decide whether to hide the whole revision info box or not
+        if(this.isModerator || (this.activeRevision != this.lastApproved)){
+            $('#revision-info').fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+        else{
+            $('#revision-info').fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
         }
     },
 
@@ -210,12 +214,12 @@ CKANEXT.MODERATEDEDITS = {
             if(CKANEXT.MODERATEDEDITS.doesMatch(inputValue, revisionValue)){
                 // fields match, so just set css style
                 $(value).addClass("revision-match");
-                $(value).next("div").fadeOut(500);
+                $(value).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
             }
             else{
                 // fields don't match - display shadow
                 $(value).removeClass("revision-match");
-                $(value).next("div").empty().append(revisionValue).fadeIn(500);
+                $(value).next("div").empty().append(revisionValue).fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
             }
         });
     }
