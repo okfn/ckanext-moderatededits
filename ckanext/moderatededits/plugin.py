@@ -86,7 +86,7 @@ class ModeratedEditsPlugin(SingletonPlugin):
             # add javascript links
             stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
             # add revision info box
-            stream = stream | Transformer('body//div[@class="package"]//h2')\
+            stream = stream | Transformer('body//div[@class="package"]/h2[1]')\
                 .after(HTML(html.REVISION_INFO_CODE))
             # add revision list widget
             stream = stream | Transformer('body//div[@id="primary"]')\
