@@ -186,7 +186,7 @@ CKANEXT.MODERATEDEDITS = {
     updateShadows:function(){
         var success = function(data){
             CKANEXT.MODERATEDEDITS.shadows = data;
-            CKANEXT.MODERATEDEDITS.showMatchesAndShadows();
+            CKANEXT.MODERATEDEDITS.showAllMatchesAndShadows();
         };
 
         $.ajax({method: 'GET',
@@ -197,8 +197,12 @@ CKANEXT.MODERATEDEDITS = {
     },
 
     // click handler for 'copy value to field' button in shadow area
-    copyValueToField:function(){
-        alert('copy value to field');
+    copyValueToField:function(e){
+        var fieldName = $(e.target).parent().attr('id').substr("shadow-replace-".length);
+        var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
+        var field = $('input[name=' + fieldName + ']');
+        field.val(shadowValue);
+        CKANEXT.MODERATEDEDITS.showMatchOrShadow(field);
     },
 
     // returns true if the value of a matches the value of b, or if b is undefined
@@ -211,31 +215,36 @@ CKANEXT.MODERATEDEDITS = {
 
     // show matching fields (have the 'revision-match' class), or shadow fields
     // if the current field differs from the active revision
-    showMatchesAndShadows:function(){
+    showMatchOrShadow:function(field){
+        var fieldName = $(field).attr("name");
+        var inputValue = $(field).val();
+        var revisionValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
+
+        if(CKANEXT.MODERATEDEDITS.doesMatch(inputValue, revisionValue)){
+            // fields match, so just set css style
+            $(field).addClass("revision-match");
+            $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+        else{
+            // fields don't match - display shadow
+            $(field).removeClass("revision-match");
+
+            var shadow = '<div class="shadow-value">' + revisionValue + '</div>';
+            $(field).next("div").empty().append(shadow).fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+            
+            var button = '<div class="shadow-replace-button">' +
+                         '<a id="shadow-replace-' + fieldName + '" ' +
+                         '   class="button pcb"><span>Copy value to field</span></a>' +
+                         '</div>'
+            $(field).next("div").append(button); 
+            $('a#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueToField);
+        }
+    },
+
+    // show either shadows or matches for all fields
+    showAllMatchesAndShadows:function(){
         $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
-            var fieldName = $(value).attr("name");
-            var inputValue = $(value).val();
-            var revisionValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
-
-            if(CKANEXT.MODERATEDEDITS.doesMatch(inputValue, revisionValue)){
-                // fields match, so just set css style
-                $(value).addClass("revision-match");
-                $(value).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
-            }
-            else{
-                // fields don't match - display shadow
-                $(value).removeClass("revision-match");
-
-                var shadow = '<div class="shadow-value">' + revisionValue + '</div>';
-                $(value).next("div").empty().append(shadow).fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
-                
-                var button = '<div class="shadow-replace-button">' +
-                             '<a id="shadow-replace-' + fieldName + '" ' +
-                             '   class="button pcb"><span>Copy value to field</span></a>' +
-                             '</div>'
-                $(value).next("div").append(button); 
-                $('a#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueToField);
-            }
+            CKANEXT.MODERATEDEDITS.showMatchOrShadow(value);
         });
     }
 };
