@@ -8,6 +8,7 @@ HEAD_CODE = """
 BODY_CODE = """
 <script type="text/javascript" src="/ckanext-moderatededits/jquery-1.5.2.min.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/jquery-ui-1.8.13.custom.min.js"></script>
+<script type="text/javascript" src="/ckanext-moderatededits/diff_match_patch.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/moderatededits.js"></script>
 <script type="text/javascript">
     $('document').ready(function($){

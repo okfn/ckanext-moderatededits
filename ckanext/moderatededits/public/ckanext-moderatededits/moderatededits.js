@@ -38,6 +38,10 @@ CKANEXT.MODERATEDEDITS = {
 
         // set speed for JQuery fades (in milliseconds)
         this.fadeTime = 500;
+
+        // add a diff-match-patch object to get a diff of textareas
+        this.dmp = new diff_match_patch();
+        this.dmp.Diff_Timeout = 1;
     },
 
     // if the active revision is not approved,
@@ -201,9 +205,9 @@ CKANEXT.MODERATEDEDITS = {
     copyValueClicked:function(e){
         var fieldName = $(e.target).parent().attr('id').substr("shadow-replace-".length);
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
-        var field = $('input[name=' + fieldName + ']');
+        var field = $('[name=' + fieldName + ']');
         field.val(shadowValue);
-        CKANEXT.MODERATEDEDITS.showMatchOrShadow(field);
+        CKANEXT.MODERATEDEDITS.showMatchOrShadow(field[0]);
     },
 
     // callback for key pressed in an edit box (input, textarea)
@@ -211,12 +215,13 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.showMatchOrShadow(e.target);
     },
 
-    // returns true if the value of a matches the value of b, or if b is undefined
-    doesMatch:function(a, b){
-        if((a === b) || (typeof b === "undefined")){
-            return true;
+    normaliseLineEndings:function(input){
+        if(input){
+            var reNewline = /\u000d[\u000a\u0085]|[\u0085\u2028\u000d\u000a]/g;
+            var nl = '\u000a'; // LF
+            return input.replace(reNewline, nl);
         }
-        return false;
+        return undefined;
     },
 
     // show matching fields (have the 'revision-match' class), or shadow fields
@@ -226,10 +231,16 @@ CKANEXT.MODERATEDEDITS = {
         var inputValue = $(field).val();
         var revisionValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
 
-        if(CKANEXT.MODERATEDEDITS.doesMatch(inputValue, revisionValue)){
+        inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
+        revisionValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(revisionValue);
+
+        if(inputValue === revisionValue){
             // fields match, so just set css style
             $(field).addClass("revision-match");
             $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+        else if(typeof revisionValue === "undefined"){
+            // ignore - empty fields to enter resources or extra keys/values
         }
         else{
             // fields don't match - display shadow
@@ -242,8 +253,8 @@ CKANEXT.MODERATEDEDITS = {
                 shadow += revisionValue;
             }
             else if(field.nodeName.toLowerCase() === "textarea"){
-                shadow += '<textarea readonly="readonly">' +
-                          revisionValue + '</textarea>';
+                var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(revisionValue, inputValue);
+                shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
             }
             else if(field.nodeName.toLowerCase() === "select"){
             }
