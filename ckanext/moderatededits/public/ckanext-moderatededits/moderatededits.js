@@ -203,7 +203,7 @@ CKANEXT.MODERATEDEDITS = {
 
     // click handler for 'copy value to field' button in shadow area
     copyValueClicked:function(e){
-        var fieldName = $(e.target).parent().attr('id').substr("shadow-replace-".length);
+        var fieldName = $(this).attr('id').substr("shadow-replace-".length);
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
         var field = $('[name=' + fieldName + ']');
         field.val(shadowValue);
