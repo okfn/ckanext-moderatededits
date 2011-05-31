@@ -44,6 +44,7 @@ a.button span {
 a.button:hover {
 	background-position: left -246px;
     cursor: pointer;
+    color: #333;
 }
 a.button:hover span {
 	background-position: right -572px;
