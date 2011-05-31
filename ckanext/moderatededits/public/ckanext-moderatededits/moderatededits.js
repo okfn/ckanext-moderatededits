@@ -34,9 +34,7 @@ CKANEXT.MODERATEDEDITS = {
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
-
-        // TODO: display revision log message
-        // TODO: revision list and save buttons
+        this.formInputs.keydown(this.inputValueChanged);
 
         // set speed for JQuery fades (in milliseconds)
         this.fadeTime = 500;
@@ -236,16 +234,22 @@ CKANEXT.MODERATEDEDITS = {
         else{
             // fields don't match - display shadow
             $(field).removeClass("revision-match");
+            $(field).next("div").empty();
+
+            // console.log(field.nodeName.toLowerCase());
 
             var shadow = '<div class="shadow-value">' + revisionValue + '</div>';
-            $(field).next("div").empty().append(shadow).fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+            $(field).next("div").append(shadow);
             
-            var button = '<div class="shadow-replace-button">' +
-                         '<a id="shadow-replace-' + fieldName + '" ' +
-                         '   class="button pcb"><span>Copy value to field</span></a>' +
-                         '</div>'
+            var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
+                         'Copy value to field</button>'
             $(field).next("div").append(button); 
-            $('a#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
+            $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
+            $('button#shadow-replace-' + fieldName).button(
+                {icons : {primary:'ui-icon-arrowthick-1-n'}}
+            );
+
+            $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
         }
     },
 

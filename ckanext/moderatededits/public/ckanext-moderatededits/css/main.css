@@ -46,18 +46,12 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 #package-edit input, textarea, select { outline: none; }
 #package-edit .revision-match { border: 1px solid #04ae0d; }
 .shadow { 
-    background-image:url('/ckanext-moderatededits/images/arrow.png');
-    background-repeat:no-repeat;
-    background-position: left top;
     border: 1px solid #04ae0d; 
     padding: 4px;
     margin-bottom: 0.5em;
     display: none;
     width: 30em;
 }
-.shadow-value {
-    padding-left: 1.5em;
-}
-.shadow-replace-button { 
-    padding: 1em 0 0 1em;
+.shadow button { 
+    margin-top: 1em;
 }

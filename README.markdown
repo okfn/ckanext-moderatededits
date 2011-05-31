@@ -27,9 +27,13 @@ Todo / Roadmap
 --------------
 
 * Fix style for revision list so that it is correctly aligned with the package edit form.
-* Fix style for shadow fields so widths match input widths
 * Localise displayed dates.
 * Show moderator help box for 'click here to find out what this means' link on package edit pages.
+* Limit no. revisions shown in the revisions box, maybe show as separate pages with prev/next buttons.
+* Display revision log messages
+* Add ability to save a moderated revision
+* Don't check values of empty fields such as the blank row for adding new resources or the blank
+  rows for adding new extra key/value pairs
 
 Tests
 -----
