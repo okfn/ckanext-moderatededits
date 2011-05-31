@@ -30,10 +30,13 @@ CKANEXT.MODERATEDEDITS = {
         this.revisionList();
 
         // add click handler for 'select latest revision' link in info box
-        $('a#revision-select-latest').click(CKANEXT.MODERATEDEDITS.latestApprovedClicked);
+        $('a#revision-select-latest').click(this.latestApprovedClicked);
+
+        // callback handler for form fields being changed
+        this.formInputs.change(this.inputValueChanged);
 
         // TODO: display revision log message
-        // TODO: buttons
+        // TODO: revision list and save buttons
 
         // set speed for JQuery fades (in milliseconds)
         this.fadeTime = 500;
@@ -197,12 +200,17 @@ CKANEXT.MODERATEDEDITS = {
     },
 
     // click handler for 'copy value to field' button in shadow area
-    copyValueToField:function(e){
+    copyValueClicked:function(e){
         var fieldName = $(e.target).parent().attr('id').substr("shadow-replace-".length);
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
         var field = $('input[name=' + fieldName + ']');
         field.val(shadowValue);
         CKANEXT.MODERATEDEDITS.showMatchOrShadow(field);
+    },
+
+    // callback for key pressed in an edit box (input, textarea)
+    inputValueChanged:function(e){
+        CKANEXT.MODERATEDEDITS.showMatchOrShadow($(e.target));
     },
 
     // returns true if the value of a matches the value of b, or if b is undefined
@@ -237,7 +245,7 @@ CKANEXT.MODERATEDEDITS = {
                          '   class="button pcb"><span>Copy value to field</span></a>' +
                          '</div>'
             $(field).next("div").append(button); 
-            $('a#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueToField);
+            $('a#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
         }
     },
 
