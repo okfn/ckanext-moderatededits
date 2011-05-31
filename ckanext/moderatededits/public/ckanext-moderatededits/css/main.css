@@ -52,6 +52,9 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
     display: none;
     width: 30em;
 }
-.shadow button { 
-    margin-top: 1em;
-}
+.shadow button { margin-top: 1em; }
+.shadow textarea { 
+    width: 29em; 
+    border: none; 
+    overflow: auto; 
+    resize: none; }

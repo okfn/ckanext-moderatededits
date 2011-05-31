@@ -34,7 +34,7 @@ CKANEXT.MODERATEDEDITS = {
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
-        this.formInputs.keydown(this.inputValueChanged);
+        this.formInputs.keyup(this.inputValueChanged);
 
         // set speed for JQuery fades (in milliseconds)
         this.fadeTime = 500;
@@ -208,7 +208,7 @@ CKANEXT.MODERATEDEDITS = {
 
     // callback for key pressed in an edit box (input, textarea)
     inputValueChanged:function(e){
-        CKANEXT.MODERATEDEDITS.showMatchOrShadow($(e.target));
+        CKANEXT.MODERATEDEDITS.showMatchOrShadow(e.target);
     },
 
     // returns true if the value of a matches the value of b, or if b is undefined
@@ -236,11 +236,21 @@ CKANEXT.MODERATEDEDITS = {
             $(field).removeClass("revision-match");
             $(field).next("div").empty();
 
-            // console.log(field.nodeName.toLowerCase());
-
-            var shadow = '<div class="shadow-value">' + revisionValue + '</div>';
+            // different type of shadow depending on input type
+            var shadow = '<div class="shadow-value">';
+            if(field.nodeName.toLowerCase() === "input"){
+                shadow += revisionValue;
+            }
+            else if(field.nodeName.toLowerCase() === "textarea"){
+                shadow += '<textarea readonly="readonly">' +
+                          revisionValue + '</textarea>';
+            }
+            else if(field.nodeName.toLowerCase() === "select"){
+            }
+            shadow += '</div>';
             $(field).next("div").append(shadow);
             
+            // add the 'copy to field' button
             var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
                          'Copy value to field</button>'
             $(field).next("div").append(button); 
