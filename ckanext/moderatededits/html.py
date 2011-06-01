@@ -11,9 +11,9 @@ BODY_CODE = """
 <script type="text/javascript" src="/ckanext-moderatededits/diff_match_patch.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/moderatededits.js"></script>
 <script type="text/javascript">
-    $('document').ready(function($){
+    jQuery.noConflict();
+    jQuery('document').ready(function($){
         CKANEXT.MODERATEDEDITS.init('%(package_name)s', '%(revision_list_url)s', '%(revision_data_url)s');
-                                    
     });
 </script>
 """
