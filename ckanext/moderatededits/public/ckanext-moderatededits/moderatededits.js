@@ -1,5 +1,4 @@
 // CKAN Moderated Edits Extension
-
 var CKANEXT = CKANEXT || {};
 
 CKANEXT.MODERATEDEDITS = {
@@ -231,6 +230,11 @@ CKANEXT.MODERATEDEDITS = {
         var inputValue = $(field).val();
         var revisionValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
 
+        // ignore - empty fields to enter resources or extra keys/values
+        if(typeof revisionValue === "undefined"){
+            return;
+        }
+
         inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
         revisionValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(revisionValue);
 
@@ -238,9 +242,6 @@ CKANEXT.MODERATEDEDITS = {
             // fields match, so just set css style
             $(field).addClass("revision-match");
             $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
-        }
-        else if(typeof revisionValue === "undefined"){
-            // ignore - empty fields to enter resources or extra keys/values
         }
         else{
             // fields don't match - display shadow
@@ -257,6 +258,9 @@ CKANEXT.MODERATEDEDITS = {
                 shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
             }
             else if(field.nodeName.toLowerCase() === "select"){
+                // for selects, we want to display the text for the appropriate
+                // option rather than the value
+                shadow += $(field).children('option[value='+revisionValue+']').text();
             }
             shadow += '</div>';
             $(field).next("div").append(shadow);
