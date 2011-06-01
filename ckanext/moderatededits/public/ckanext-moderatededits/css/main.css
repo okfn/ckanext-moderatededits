@@ -28,11 +28,14 @@
 
 /* Revisions list */
 #revision-list-widget { padding: 10px; }
-#revision-list-widget div { margin-top: 2em; }
+#revision-list-widget div { margin-top: 1em; }
 #revision-list-widget h3 {
     color: #000;
     margin-bottom: 1em;
 }
+#revision-list { margin: 0; }
+#revision-replace-all { padding: 4px; margin-left: 2em; vertical-align: middle; }
+#revision-replace-all-warning { display: none; }
 li.revision-approved:before {
     content: "* ";
     color: #b00;

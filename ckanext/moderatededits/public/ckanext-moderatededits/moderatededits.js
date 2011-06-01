@@ -10,14 +10,11 @@ CKANEXT.MODERATEDEDITS = {
         // find out if the current user is a moderator by looking for the
         // option to change the package state
         this.isModerator = $('#state').length > 0;
-
         // enable the sidebar which is where the revision list goes by default
         $('body').removeClass("hide-sidebar");
-
         // add empty shadow divs that will be filled later if necessary
         this.formInputs = $('#package-edit input[type=text], select, textarea');
         this.formInputs.after('<div class="shadow"></div>');
-
         // default active revision is the latest one
         this.activeRevision = 0;
         this.activeRevisionID = null;
@@ -27,17 +24,14 @@ CKANEXT.MODERATEDEDITS = {
 
         // display revision info box and list
         this.revisionList();
-
         // add click handler for 'select latest revision' link in info box
         $('a#revision-select-latest').click(this.latestApprovedClicked);
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
         this.formInputs.keyup(this.inputValueChanged);
-
         // set speed for JQuery fades (in milliseconds)
         this.fadeTime = 500;
-
         // add a diff-match-patch object to get a diff of textareas
         this.dmp = new diff_match_patch();
         this.dmp.Diff_Timeout = 1;
@@ -114,7 +108,7 @@ CKANEXT.MODERATEDEDITS = {
     revisionList:function(){
         var success = function(response){
             if(response.length == 0){
-                var html = '<li>No previous revisions found.</li>';
+                $('#revision-list-msg').empty().replaceWith("No previous revisions found.");
             }
             else{
                 var html = "";
@@ -147,7 +141,15 @@ CKANEXT.MODERATEDEDITS = {
                     html += '">';
 
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
-                        html += revisionDate
+                        html += '<span id="revision-active-text">' + revisionDate +  
+                                '</span>' +
+                                '<button id="revision-replace-all"' + 
+                                ' title="Replace all fields with values from this revision"></button>' +
+                                '<div id="revision-replace-all-warning"' +
+                                ' title="Replace all fields with values from this revision?">' +
+                                'This action will replace any changes that you have made to ' +
+                                'the package edit form with the values from this revision.' +
+                                '</div>';
                     }
                     else{
                         html += '<a id="revision-' + i.toString() + '" ' +
@@ -157,19 +159,38 @@ CKANEXT.MODERATEDEDITS = {
                     }
                     html += '</li>';
                 }
-                html += '<div>Revisions that have been approved by the ' +
-                        'moderator are marked with a ' +
-                        '<span class="revision-approved-marker">*</span>';
+                $('#revision-list').empty().append(html);
+                // add a click handlers for revision list URLs
+                $('a.revision-list-button').click(CKANEXT.MODERATEDEDITS.revisionClicked);
+                // add dialog for replace all confirmation box
+                $('#revision-replace-all-warning').dialog({
+                    autoOpen: false,
+                    resizable: false,
+                    modal: true,
+                    buttons: {
+				        "Replace all fields":function(){
+                            $(this).dialog("close");
+				        },
+                        Cancel:function(){
+					        $(this).dialog("close");
+                        }
+                    }
+                });
+                // add button and click handler for 'replace all' button
+                $('#revision-replace-all').button({
+                    text: false, icons : {primary:'ui-icon-transferthick-e-w'}
+                });
+                $('#revision-replace-all').click(function(){
+                    $('#revision-replace-all-warning').dialog('open');
+                });
             }
-            $('#revision-list').empty().append(html);
-
-            // add a click handlers for revision list URLs
-            $('a.revision-list-button').click(CKANEXT.MODERATEDEDITS.revisionClicked);
+            // line up the top of the revision box with the top of the revision info box
+            // var headingSize = $('div.package').children('h2').filter(":first").outerHeight(true);
+            // $('#revision-list-widget').css('marginTop', headingSize + 'px');
 
             // update the revision info box
             CKANEXT.MODERATEDEDITS.revisions = response;
             CKANEXT.MODERATEDEDITS.revisionInfo();
-
             // update the shadow field values
             CKANEXT.MODERATEDEDITS.updateShadows();
         };

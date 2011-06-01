@@ -42,5 +42,9 @@ REVISION_LIST_CODE = """
     <h3>Revisions</h3>
     <ul id="revision-list">
     </ul>
+    <div id="revision-list-msg">
+        Revisions that have been approved by the moderator are marked with a 
+        <span class="revision-approved-marker">*</span>
+    </div>
 </div>
 """
