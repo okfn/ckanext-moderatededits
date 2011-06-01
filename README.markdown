@@ -28,11 +28,14 @@ Todo / Roadmap
 
 * Localise displayed dates.
 * Fix style for revision list so that it is correctly aligned with the package edit form.
-* Style buttons to match CKAN look
 * Show moderator help box for 'click here to find out what this means' link on package edit pages.
 * Limit no. revisions shown in the revisions box, maybe show as separate pages with prev/next buttons.
-* Display revision log messages? What about 'edit summary' field?
+* Do some JS validation on 'edit summary' field (the revision commit message)
 * Add ability to save a moderated revision
+* Add ability to replace all fields with a given revision's data
+* Add code to handle package resources 
+* Add code to handle package extras 
+* Add code to handle package groups 
 
 Tests
 -----
