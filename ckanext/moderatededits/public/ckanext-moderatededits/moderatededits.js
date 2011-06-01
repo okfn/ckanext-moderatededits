@@ -214,13 +214,17 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.showMatchOrShadow(e.target);
     },
 
+    // when comparing fields, ignore differences in line endings between
+    // different platforms (eg: \r\n vs \n).
+    //
+    // this function makes sure all line endings a given string are \n.
     normaliseLineEndings:function(input){
         if(input){
             var reNewline = /\u000d[\u000a\u0085]|[\u0085\u2028\u000d\u000a]/g;
             var nl = '\u000a'; // LF
             return input.replace(reNewline, nl);
         }
-        return undefined;
+        return "";
     },
 
     // show matching fields (have the 'revision-match' class), or shadow fields
@@ -266,8 +270,14 @@ CKANEXT.MODERATEDEDITS = {
             $(field).next("div").append(shadow);
             
             // add the 'copy to field' button
+            //
+            // if the revision value was an empty string, display a different message
+            // on the button
             var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
                          'Copy value to field</button>'
+            if($.trim(revisionValue) === ""){
+                button = button.replace('Copy value to field', 'Clear this field');
+            }
             $(field).next("div").append(button); 
             $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
             $('button#shadow-replace-' + fieldName).button(
