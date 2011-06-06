@@ -27,6 +27,10 @@ CKANEXT.MODERATEDEDITS = {
         // add click handler for 'select latest revision' link in info box
         $('a#revision-select-latest').click(this.latestApprovedClicked);
 
+        // change default preview/submit buttons to match style
+        $('.submit input[name="preview"]').button(); 
+        $('.submit input[name="save"]').button(); 
+
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
         this.formInputs.keyup(this.inputValueChanged);
@@ -169,6 +173,7 @@ CKANEXT.MODERATEDEDITS = {
                     modal: true,
                     buttons: {
 				        "Replace all fields":function(){
+                            CKANEXT.MODERATEDEDITS.replaceAllWithShadows();
                             $(this).dialog("close");
 				        },
                         Cancel:function(){
@@ -221,13 +226,29 @@ CKANEXT.MODERATEDEDITS = {
         }); 
     },
 
-    // click handler for 'copy value to field' button in shadow area
-    copyValueClicked:function(e){
-        var fieldName = $(this).attr('id').substr("shadow-replace-".length);
+    // replace all field values with current shadow values
+    replaceAllWithShadows:function(){
+        $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
+            var fieldName = $(value).attr('name');
+            var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
+            if(shadowValue != undefined){
+                CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
+            }
+        });
+    },
+
+    // replace field value with current shadow values
+    replaceWithShadow:function(fieldName){
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
         var field = $('[name=' + fieldName + ']');
         field.val(shadowValue);
         CKANEXT.MODERATEDEDITS.showMatchOrShadow(field[0]);
+    },
+
+    // click handler for 'copy value to field' button in shadow area
+    copyValueClicked:function(e){
+        var fieldName = $(this).attr('id').substr("shadow-replace-".length);
+        CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
     },
 
     // callback for key pressed in an edit box (input, textarea)
