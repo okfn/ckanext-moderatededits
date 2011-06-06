@@ -24,6 +24,8 @@ CKANEXT.MODERATEDEDITS = {
 
         // display revision info box and list
         this.revisionList();
+        // add click handler for 'click here for more information' link in info box
+        $('a#revision-show-mod-info').click(this.showModInfoClicked);
         // add click handler for 'select latest revision' link in info box
         $('a#revision-select-latest').click(this.latestApprovedClicked);
 
@@ -95,6 +97,11 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.activeRevision = index;
         CKANEXT.MODERATEDEDITS.revisionInfo();
         CKANEXT.MODERATEDEDITS.revisionList();
+    },
+
+    showModInfoClicked:function(){
+        $('#revision-show-mod-info').fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
+        $('#revision-moderator-info').slideToggle();
     },
 
     latestApprovedClicked:function(){
@@ -189,9 +196,6 @@ CKANEXT.MODERATEDEDITS = {
                     $('#revision-replace-all-warning').dialog('open');
                 });
             }
-            // line up the top of the revision box with the top of the revision info box
-            // var headingSize = $('div.package').children('h2').filter(":first").outerHeight(true);
-            // $('#revision-list-widget').css('marginTop', headingSize + 'px');
 
             // update the revision info box
             CKANEXT.MODERATEDEDITS.revisions = response;

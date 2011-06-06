@@ -24,7 +24,16 @@ REVISION_INFO_CODE = """
         <li id="revision-info-moderator">
             <span class="revision-info-item">
                 You are a moderator for this package.
-                <a href="">Click here to find out what this means.</a>
+                <a id="revision-show-mod-info">Click here for more information.</a>
+                <div id="revision-moderator-info">
+                <p>Any community member can make changes to the metadata for a package and save
+                them as a new revision. The revisions for a given package are listed in the
+                "Revisions" panel on the right hand side of this page.</p>
+                <p>However, these community changes are not displayed by default when a 
+                package is viewed. First, a moderator must approve the changes.
+                You can approve the current revision by clicking the 
+                "Save And Approve" button at the bottom of the page.</p>
+                </div>
             </span>
         </li>
         <li id="revision-info-link-to-latest">
