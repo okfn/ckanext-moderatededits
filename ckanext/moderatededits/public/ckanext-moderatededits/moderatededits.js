@@ -32,6 +32,14 @@ CKANEXT.MODERATEDEDITS = {
         // change default preview/submit buttons to match style
         $('.submit input[name="preview"]').button(); 
         $('.submit input[name="save"]').button(); 
+        // add new button for saving a moderated version
+        if(this.isModerator){
+            var saveModHtml = ' <input name="save-approved" type="submit" ' +
+                'value="Save And Approve" />';
+            $('.submit input[name="save"]').after(saveModHtml);
+            // $('#save-approved').click(CKANEXT.MODERATEDEDITS.saveApprovedClicked).button();
+            $('.submit input[name="save-approved"]').button();
+        }
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
