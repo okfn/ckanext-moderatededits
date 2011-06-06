@@ -286,17 +286,17 @@ CKANEXT.MODERATEDEDITS = {
     showMatchOrShadow:function(field){
         var fieldName = $(field).attr("name");
         var inputValue = $(field).val();
-        var revisionValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
+        var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
 
         // ignore - empty fields to enter resources or extra keys/values
-        if(typeof revisionValue === "undefined"){
+        if(typeof shadowValue === "undefined"){
             return;
         }
 
         inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
-        revisionValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(revisionValue);
+        shadowValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(shadowValue);
 
-        if(inputValue === revisionValue){
+        if(inputValue === shadowValue){
             // fields match, so just set css style
             $(field).addClass("revision-match");
             $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
@@ -309,16 +309,16 @@ CKANEXT.MODERATEDEDITS = {
             // different type of shadow depending on input type
             var shadow = '<div class="shadow-value">';
             if(field.nodeName.toLowerCase() === "input"){
-                shadow += revisionValue;
+                shadow += shadowValue;
             }
             else if(field.nodeName.toLowerCase() === "textarea"){
-                var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(revisionValue, inputValue);
+                var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
                 shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
             }
             else if(field.nodeName.toLowerCase() === "select"){
                 // for selects, we want to display the text for the appropriate
                 // option rather than the value
-                shadow += $(field).children('option[value='+revisionValue+']').text();
+                shadow += $(field).children('option[value='+shadowValue+']').text();
             }
             shadow += '</div>';
             $(field).next("div").append(shadow);
@@ -329,7 +329,7 @@ CKANEXT.MODERATEDEDITS = {
             // on the button
             var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
                          'Copy value to field</button>'
-            if($.trim(revisionValue) === ""){
+            if($.trim(shadowValue) === ""){
                 button = button.replace('Copy value to field', 'Clear this field');
             }
             $(field).next("div").append(button); 
