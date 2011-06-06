@@ -45,7 +45,8 @@ li.revision-approved:before {
     content: "* ";
     color: #b00;
 }
-.revision-active { border: 1px solid #04ae0d; }
+.revision-active-matching { border: 1px solid #04ae0d; }
+.revision-active { border: 1px solid #f8dc30; }
 li.revision-approved { padding: 10px 15px 10px 5px; }
 li.revision-not-approved { padding: 10px 15px 10px 15px; }
 .revision-approved-marker { color: #b00; }
@@ -54,7 +55,7 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 #package-edit input, textarea, select { outline: none; }
 #package-edit .revision-match { border: 1px solid #04ae0d; }
 .shadow { 
-    border: 1px solid #04ae0d; 
+    border: 1px solid #f8dc30; 
     padding: 4px;
     margin-bottom: 0.5em;
     display: none;

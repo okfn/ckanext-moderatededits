@@ -2,6 +2,13 @@
 var CKANEXT = CKANEXT || {};
 
 CKANEXT.MODERATEDEDITS = {
+    // named constants
+    STANDARD_FIELD: 0,
+    RESOURCES_FIELD: 1,
+    EXTRAS_FIELD: 2,
+    GROUPS_FIELD: 3,
+
+    // initialisation function, called when the page has finished loading
     init:function(packageName, revisionListURL, revisionDataURL){
         this.packageName = packageName;
         this.revisionListURL = revisionListURL;
@@ -15,6 +22,26 @@ CKANEXT.MODERATEDEDITS = {
         // add empty shadow divs that will be filled later if necessary
         this.formInputs = $('#package-edit input[type=text], select, textarea');
         this.formInputs.after('<div class="shadow"></div>');
+        // for each form input, decide whether it should have the standard
+        // shadow, or if it belongs to a special case (resources, extras, etc)
+        this.formInputTypes = {}
+        $.each(this.formInputs, function(index, value){
+            var legend = $(value).closest('fieldset').children('legend').text();
+            if(legend === 'Resources'){
+                var inputType = CKANEXT.MODERATEDEDITS.RESOURCES_FIELD;
+            }
+            else if(legend === 'Extras'){
+                var inputType = CKANEXT.MODERATEDEDITS.EXTRAS_FIELD;
+            }
+            else if(legend === 'Groups'){
+                var inputType = CKANEXT.MODERATEDEDITS.GROUPS_FIELD;
+            }
+            else{
+                var inputType = CKANEXT.MODERATEDEDITS.STANDARD_FIELD;
+            }
+            CKANEXT.MODERATEDEDITS.formInputTypes[$(value).attr('name')] = inputType;
+        });
+
         // default active revision is the latest one
         this.activeRevision = 0;
         this.activeRevisionID = null;
@@ -37,7 +64,6 @@ CKANEXT.MODERATEDEDITS = {
             var saveModHtml = ' <input name="save-approved" type="submit" ' +
                 'value="Save And Approve" />';
             $('.submit input[name="save"]').after(saveModHtml);
-            // $('#save-approved').click(CKANEXT.MODERATEDEDITS.saveApprovedClicked).button();
             $('.submit input[name="save-approved"]').button();
         }
 
@@ -281,6 +307,45 @@ CKANEXT.MODERATEDEDITS = {
         return "";
     },
 
+    showStandardShadow:function(field, fieldName, inputValue, shadowValue){
+        // different type of shadow depending on input type
+        var shadow = '<div class="shadow-value">';
+        if(field.nodeName.toLowerCase() === "input"){
+            shadow += shadowValue;
+        }
+        else if(field.nodeName.toLowerCase() === "textarea"){
+            var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
+            shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
+        }
+        else if(field.nodeName.toLowerCase() === "select"){
+            // for selects, we want to display the text for the appropriate
+            // option rather than the value
+            shadow += $(field).children('option[value='+shadowValue+']').text();
+        }
+        shadow += '</div>';
+        $(field).next("div").append(shadow);
+        
+        // add the 'copy to field' button
+        //
+        // if the revision value was an empty string, display a different message
+        // on the button
+        var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
+                     'Copy value to field</button>'
+        if($.trim(shadowValue) === ""){
+            button = button.replace('Copy value to field', 'Clear this field');
+        }
+        $(field).next("div").append(button); 
+        $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
+        $('button#shadow-replace-' + fieldName).button(
+            {icons : {primary:'ui-icon-arrowthick-1-n'}}
+        );
+
+        $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+    },
+
+    showResourcesShadow:function(field){
+    },
+
     // show matching fields (have the 'revision-match' class), or shadow fields
     // if the current field differs from the active revision
     showMatchOrShadow:function(field){
@@ -305,40 +370,10 @@ CKANEXT.MODERATEDEDITS = {
             // fields don't match - display shadow
             $(field).removeClass("revision-match");
             $(field).next("div").empty();
-
-            // different type of shadow depending on input type
-            var shadow = '<div class="shadow-value">';
-            if(field.nodeName.toLowerCase() === "input"){
-                shadow += shadowValue;
+            if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+               CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
+                CKANEXT.MODERATEDEDITS.showStandardShadow(field, fieldName, inputValue, shadowValue);
             }
-            else if(field.nodeName.toLowerCase() === "textarea"){
-                var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
-                shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
-            }
-            else if(field.nodeName.toLowerCase() === "select"){
-                // for selects, we want to display the text for the appropriate
-                // option rather than the value
-                shadow += $(field).children('option[value='+shadowValue+']').text();
-            }
-            shadow += '</div>';
-            $(field).next("div").append(shadow);
-            
-            // add the 'copy to field' button
-            //
-            // if the revision value was an empty string, display a different message
-            // on the button
-            var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
-                         'Copy value to field</button>'
-            if($.trim(shadowValue) === ""){
-                button = button.replace('Copy value to field', 'Clear this field');
-            }
-            $(field).next("div").append(button); 
-            $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
-            $('button#shadow-replace-' + fieldName).button(
-                {icons : {primary:'ui-icon-arrowthick-1-n'}}
-            );
-
-            $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
         }
     },
 
