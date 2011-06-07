@@ -24,6 +24,11 @@ CKANEXT.MODERATEDEDITS = {
         this.formInputs.after('<div class="shadow"></div>');
         // for each form input, decide whether it should have the standard
         // shadow, or if it belongs to a special case (resources, extras, etc)
+        //
+        // here we do this by checking which fieldset the form item is in
+        //
+        // another option would be to check the name of the item, as currently
+        // resources start with 'resources__', extras with 'extras__', etc.
         this.formInputTypes = {}
         $.each(this.formInputs, function(index, value){
             var legend = $(value).closest('fieldset').children('legend').text();
@@ -48,6 +53,8 @@ CKANEXT.MODERATEDEDITS = {
         this.activeRevisionMsg = null;
         this.revisions = null;
         this.lastApproved = 0;
+        this.shadows = {};
+        this.shadowResourceNumbers = {};
 
         // display revision info box and list
         this.revisionList();
@@ -254,7 +261,14 @@ CKANEXT.MODERATEDEDITS = {
     updateShadows:function(){
         var success = function(data){
             CKANEXT.MODERATEDEDITS.shadows = data;
-            CKANEXT.MODERATEDEDITS.showAllMatchesAndShadows();
+            // save resource number based on ID
+            for(var i in data){
+                if((i.substr(0, 11) === 'resources__') &&
+                   (i.substr(12) === '__id')){
+                    CKANEXT.MODERATEDEDITS.shadowResourceNumbers[data[i]] = i.charAt(11);
+                }
+            }
+            CKANEXT.MODERATEDEDITS.allMatchesAndShadows();
         };
 
         $.ajax({method: 'GET',
@@ -280,7 +294,7 @@ CKANEXT.MODERATEDEDITS = {
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
         var field = $('[name=' + fieldName + ']');
         field.val(shadowValue);
-        CKANEXT.MODERATEDEDITS.showMatchOrShadow(field[0]);
+        CKANEXT.MODERATEDEDITS.matchOrShadow(field[0]);
     },
 
     // click handler for 'copy value to field' button in shadow area
@@ -291,7 +305,7 @@ CKANEXT.MODERATEDEDITS = {
 
     // callback for key pressed in an edit box (input, textarea)
     inputValueChanged:function(e){
-        CKANEXT.MODERATEDEDITS.showMatchOrShadow(e.target);
+        CKANEXT.MODERATEDEDITS.matchOrShadow(e.target);
     },
 
     // when comparing fields, ignore differences in line endings between
@@ -307,60 +321,8 @@ CKANEXT.MODERATEDEDITS = {
         return "";
     },
 
-    showStandardShadow:function(field, fieldName, inputValue, shadowValue){
-        // different type of shadow depending on input type
-        var shadow = '<div class="shadow-value">';
-        if(field.nodeName.toLowerCase() === "input"){
-            shadow += shadowValue;
-        }
-        else if(field.nodeName.toLowerCase() === "textarea"){
-            var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
-            shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
-        }
-        else if(field.nodeName.toLowerCase() === "select"){
-            // for selects, we want to display the text for the appropriate
-            // option rather than the value
-            shadow += $(field).children('option[value='+shadowValue+']').text();
-        }
-        shadow += '</div>';
-        $(field).next("div").append(shadow);
-        
-        // add the 'copy to field' button
-        //
-        // if the revision value was an empty string, display a different message
-        // on the button
-        var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
-                     'Copy value to field</button>'
-        if($.trim(shadowValue) === ""){
-            button = button.replace('Copy value to field', 'Clear this field');
-        }
-        $(field).next("div").append(button); 
-        $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
-        $('button#shadow-replace-' + fieldName).button(
-            {icons : {primary:'ui-icon-arrowthick-1-n'}}
-        );
-
-        $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
-    },
-
-    showResourcesShadow:function(field){
-    },
-
-    // show matching fields (have the 'revision-match' class), or shadow fields
-    // if the current field differs from the active revision
-    showMatchOrShadow:function(field){
-        var fieldName = $(field).attr("name");
-        var inputValue = $(field).val();
-        var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
-
-        // ignore - empty fields to enter resources or extra keys/values
-        if(typeof shadowValue === "undefined"){
-            return;
-        }
-
-        inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
-        shadowValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(shadowValue);
-
+    // show match or shadow for standard form inputs (input, textarea, select)
+    standardMatchOrShadow:function(field, fieldName, inputValue, shadowValue){
         if(inputValue === shadowValue){
             // fields match, so just set css style
             $(field).addClass("revision-match");
@@ -370,17 +332,99 @@ CKANEXT.MODERATEDEDITS = {
             // fields don't match - display shadow
             $(field).removeClass("revision-match");
             $(field).next("div").empty();
-            if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
-               CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
-                CKANEXT.MODERATEDEDITS.showStandardShadow(field, fieldName, inputValue, shadowValue);
+
+            // different type of shadow depending on input type
+            var shadow = '<div class="shadow-value">';
+            if(field.nodeName.toLowerCase() === "input"){
+                shadow += shadowValue;
             }
+            else if(field.nodeName.toLowerCase() === "textarea"){
+                inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
+                shadowValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(shadowValue);
+                var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
+                shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
+            }
+            else if(field.nodeName.toLowerCase() === "select"){
+                // for selects, we want to display the text for the appropriate
+                // option rather than the value
+                shadow += $(field).children('option[value='+shadowValue+']').text();
+            }
+            shadow += '</div>';
+            $(field).next("div").append(shadow);
+            
+            // add the 'copy to field' button
+            //
+            // if the revision value was an empty string, display a different message
+            // on the button
+            var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
+                         'Copy value to field</button>'
+            if($.trim(shadowValue) === ""){
+                button = button.replace('Copy value to field', 'Clear this field');
+            }
+            $(field).next("div").append(button); 
+            $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
+            $('button#shadow-replace-' + fieldName).button(
+                {icons : {primary:'ui-icon-arrowthick-1-n'}}
+            );
+
+            $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+        }
+    },
+
+    // show match or shadow for resources section
+    resourcesMatchOrShadow:function(field, fieldName){
+        // ignore the resources__N__hash field
+        if(fieldName.substr(12) === "__hash"){
+            return;
+        }
+
+        // need to compare resources based on ID, as their position in the table
+        // can vary
+        //
+        // show a match if all items in the resource row are equal (not just this field)
+        var rNumber = fieldName.charAt(11); // length of 'resources__'
+        var rID = $('input[name="resources__' + rNumber + '__id"]').attr('value');
+        var rURL = $('input[name="resources__' + rNumber + '__url"]').val();
+        var rFormat = $('input[name="resources__' + rNumber + '__format"]').val();
+        var rDesc = $('input[name="resources__' + rNumber + '__description"]').val();
+
+        var shadowNumber = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
+        var shadowURL = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__url'];
+        var shadowFormat = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__format'];
+        var shadowDesc = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__description'];
+
+        console.log(rURL + " " + rFormat + " " + rDesc);
+        console.log(shadowURL + " " + shadowFormat + " " + shadowDesc);
+    },
+
+    // find out whether this field uses the standard match/shadow, or one of the
+    // custom views
+    matchOrShadow:function(field){
+        var fieldName = $(field).attr("name");
+        var inputValue = $(field).val();
+        var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
+
+        // ignore - empty fields to enter resources or extra keys/values
+        if(typeof shadowValue === "undefined"){
+            return;
+        }
+
+        if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+           CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
+            CKANEXT.MODERATEDEDITS.standardMatchOrShadow(
+                field, fieldName, inputValue, shadowValue);
+        }
+        else if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+           CKANEXT.MODERATEDEDITS.RESOURCES_FIELD){
+            CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(
+                field, fieldName);
         }
     },
 
     // show either shadows or matches for all fields
-    showAllMatchesAndShadows:function(){
+    allMatchesAndShadows:function(){
         $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
-            CKANEXT.MODERATEDEDITS.showMatchOrShadow(value);
+            CKANEXT.MODERATEDEDITS.matchOrShadow(value);
         });
     }
 };
