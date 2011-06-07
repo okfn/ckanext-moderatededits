@@ -52,9 +52,15 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 .revision-approved-marker { color: #b00; }
 
 /* Edit form */
+#package-edit table { 
+    border-spacing: 0px 5px; 
+    border-collapse: separate; 
+    background-color: #fff;
+    border: 0;
+}
+#package-edit .short { width: 11em; }
 #package-edit input, textarea, select { outline: none; }
 #package-edit .revision-match { border: 1px solid #04ae0d; }
-#package-edit .revision-match-resources-th { border-bottom: 1px solid #04ae0d; }
 #package-edit .revision-match-resources { border: 1px solid #04ae0d; }
 .shadow { 
     border: 1px solid #f8dc30; 
@@ -70,3 +76,7 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
     overflow: auto; 
     resize: none; 
 }
+#package-edit .resources-shadow td { 
+    border: 1px solid #f8dc30; 
+}
+#package-edit .controls { width: 6em; }

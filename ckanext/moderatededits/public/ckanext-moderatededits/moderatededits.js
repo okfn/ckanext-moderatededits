@@ -306,10 +306,24 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.matchOrShadow(field[0]);
     },
 
+    // replace a row in the resource table with its current shadow values
+    replaceResourceWithShadow:function(rID){
+        var shadowNumber = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
+        CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__url');
+        CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__format');
+        CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__description');
+    },
+
     // click handler for 'copy value to field' button in shadow area
     copyValueClicked:function(e){
         var fieldName = $(this).attr('id').substr("shadow-replace-".length);
         CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
+    },
+
+    // click handler for 'copy' button in resource shadow area
+    copyResourceClicked:function(e){
+        var rID = $(this).attr('id').substr("resources-shadow-replace-".length);
+        CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
     },
 
     // callback for key pressed in an edit box (input, textarea)
@@ -375,12 +389,11 @@ CKANEXT.MODERATEDEDITS = {
             }
             $(field).next("div").append(button); 
             $('button#shadow-replace-' + fieldName).click(CKANEXT.MODERATEDEDITS.copyValueClicked);
-            $('button#shadow-replace-' + fieldName).button(
-                {icons : {primary:'ui-icon-arrowthick-1-n'}}
-            );
+            $('button#shadow-replace-' + fieldName).button({
+                icons : {primary:'ui-icon-arrowthick-1-n'}
+            });
 
             $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
-            CKANEXT.MODERATEDEDITS.checkAllMatch();
         }
     },
 
@@ -408,20 +421,38 @@ CKANEXT.MODERATEDEDITS = {
 
         if((rURL === shadowURL) && (rFormat === shadowFormat) && (rDesc === shadowDesc)){
             $(field).closest("tr").find("td").addClass("revision-match-resources");
-            // bit of a hack: add a bottom border to the th cells if the first row is
-            // selected, otherwise the top border is not shown
-            if(rNumber === '0'){
-                $(field).closest("table").find("th").addClass("revision-match-resources-th");
+            // remove shadow if exists
+            if($(field).closest("tr").next().hasClass("resources-shadow")){
+                $(field).closest("tr").next().remove();
             }
         }
         else{
             $(field).closest("tr").find("td").removeClass("revision-match-resources");
-            if(rNumber === '0'){
-                $(field).closest("table").find("th").removeClass("revision-match-resources-th");
+            // add shadow if doesn't already exist
+            if(!$(field).closest("tr").next().hasClass("resources-shadow")){
+                var shadowHtml = '<tr class="resources-shadow">' +
+                    '<td class="resource-url shadow-value">' + 
+                    '<input readonly="readonly" type="text" class="short" value="' + shadowURL + '"/>' +
+                    '</td>' +
+                    '<td class="resource-format shadow-value">' + 
+                    '<input readonly="readonly" type="text" class="short" value="' + shadowFormat + '"/>' +
+                    '</td>' +
+                    '<td class="resource-description shadow-value">' + 
+                    '<input readonly="readonly" type="text" class="medium-width" value="' + shadowDesc + '"/>' +
+                    '</td>' +
+                    '<td class="resource-hash"></td>' +
+                    '<td class="resource-id"></td>' +
+                    '<td><div class="controls">' +
+                    '<button type="button" id="resources-shadow-replace-' +rID + '">' +
+                    'Copy</button></div></td>' +
+                    '</tr>';
+                $(field).closest("tr").after(shadowHtml);
+                $('#resources-shadow-replace-' + rID).click(CKANEXT.MODERATEDEDITS.copyResourceClicked);
+                $('#resources-shadow-replace-' + rID).button({
+                    icons : {primary:'ui-icon-arrowthick-1-n'}
+                });
             }
         }
-
-        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // find out whether this field uses the standard match/shadow, or one of the
@@ -446,6 +477,8 @@ CKANEXT.MODERATEDEDITS = {
             CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(
                 field, fieldName);
         }
+
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // show either shadows or matches for all fields
