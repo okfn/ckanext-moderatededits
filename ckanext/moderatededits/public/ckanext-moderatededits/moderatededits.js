@@ -315,7 +315,6 @@ CKANEXT.MODERATEDEDITS = {
     // callback for key pressed in an edit box (input, textarea)
     inputValueChanged:function(e){
         CKANEXT.MODERATEDEDITS.matchOrShadow(e.target);
-        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // when comparing fields, ignore differences in line endings between
@@ -338,6 +337,7 @@ CKANEXT.MODERATEDEDITS = {
             $(field).addClass("revision-match");
             $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime, function(){
                 $(field).next("div").empty();
+                CKANEXT.MODERATEDEDITS.checkAllMatch();
             });
         }
         else{
@@ -380,6 +380,7 @@ CKANEXT.MODERATEDEDITS = {
             );
 
             $(field).next("div").fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
+            CKANEXT.MODERATEDEDITS.checkAllMatch();
         }
     },
 
@@ -419,6 +420,8 @@ CKANEXT.MODERATEDEDITS = {
                 $(field).closest("table").find("th").removeClass("revision-match-resources-th");
             }
         }
+
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // find out whether this field uses the standard match/shadow, or one of the
