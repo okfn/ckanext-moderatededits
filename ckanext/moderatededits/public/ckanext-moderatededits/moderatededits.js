@@ -393,8 +393,20 @@ CKANEXT.MODERATEDEDITS = {
         var shadowFormat = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__format'];
         var shadowDesc = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__description'];
 
-        console.log(rURL + " " + rFormat + " " + rDesc);
-        console.log(shadowURL + " " + shadowFormat + " " + shadowDesc);
+        if((rURL === shadowURL) && (rFormat === shadowFormat) && (rDesc === shadowDesc)){
+            $(field).closest("tr").find("td").addClass("revision-match-resources");
+            // bit of a hack: add a bottom border to the th cells if the first row is
+            // selected, otherwise the top border is not shown
+            if(rNumber === '0'){
+                $(field).closest("table").find("th").addClass("revision-match-resources-th");
+            }
+        }
+        else{
+            $(field).closest("tr").find("td").removeClass("revision-match-resources");
+            if(rNumber === '0'){
+                $(field).closest("table").find("th").removeClass("revision-match-resources-th");
+            }
+        }
     },
 
     // find out whether this field uses the standard match/shadow, or one of the
