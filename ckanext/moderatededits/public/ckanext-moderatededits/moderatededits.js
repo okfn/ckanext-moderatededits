@@ -73,6 +73,12 @@ CKANEXT.MODERATEDEDITS = {
             $('.submit input[name="save"]').after(saveModHtml);
             $('.submit input[name="save-approved"]').button();
         }
+        // disable moveup/movedown functionality on resources form for now
+        $('a.moveUp').remove();
+        $('a.moveDown').remove();
+        // add a click handler to the 'remove this row' button in the resources
+        // area so that we can also remove any shadows
+        $('a.remove').click(this.removeResourceClicked);
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
@@ -326,6 +332,12 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
     },
 
+    // click handler for 'remove this row' button in resources being clicked
+    removeResourceClicked:function(e){
+        var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
+        $('#resources-shadow-' + rID).remove();
+    },
+
     // callback for key pressed in an edit box (input, textarea)
     inputValueChanged:function(e){
         CKANEXT.MODERATEDEDITS.matchOrShadow(e.target);
@@ -430,16 +442,17 @@ CKANEXT.MODERATEDEDITS = {
             $(field).closest("tr").find("td").removeClass("revision-match-resources");
             // add shadow if doesn't already exist
             if(!$(field).closest("tr").next().hasClass("resources-shadow")){
-                var shadowHtml = '<tr class="resources-shadow">' +
+                var shadowHtml = '<tr id="resources-shadow-' + rID + '" class="resources-shadow">' +
                     '<td class="resource-url shadow-value">' + 
-                    '<input readonly="readonly" type="text" class="short" value="' + shadowURL + '"/>' +
-                    '</td>' +
+                    '<input readonly="readonly" type="text" class="short" ' +
+                    'name="resources-shadow__' + shadowNumber + '__url" ' + 
+                    'value="' + shadowURL + '"/></td>' +
                     '<td class="resource-format shadow-value">' + 
-                    '<input readonly="readonly" type="text" class="short" value="' + shadowFormat + '"/>' +
-                    '</td>' +
+                    '<input readonly="readonly" type="text" class="short" ' + 
+                    'value="' + shadowFormat + '"/></td>' +
                     '<td class="resource-description shadow-value">' + 
-                    '<input readonly="readonly" type="text" class="medium-width" value="' + shadowDesc + '"/>' +
-                    '</td>' +
+                    '<input readonly="readonly" type="text" class="medium-width" ' + 
+                    'value="' + shadowDesc + '"/></td>' +
                     '<td class="resource-hash"></td>' +
                     '<td class="resource-id"></td>' +
                     '<td><div class="controls">' +
