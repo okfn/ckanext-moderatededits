@@ -45,8 +45,8 @@ li.revision-approved:before {
     content: "* ";
     color: #b00;
 }
-.revision-active-matching { border: 1px solid #04ae0d; }
-.revision-active { border: 1px solid #f8dc30; }
+.revision-active-match { border: 1px solid #04ae0d; }
+.revision-active-nomatch { border: 1px solid #f8dc30; }
 li.revision-approved { padding: 10px 15px 10px 5px; }
 li.revision-not-approved { padding: 10px 15px 10px 15px; }
 .revision-approved-marker { color: #b00; }

@@ -172,25 +172,22 @@ CKANEXT.MODERATEDEDITS = {
                     // Want YYYY-MM-DD so take the first 10 characters.
                     var revisionDate = response[i].timestamp.substr(0, 10);
 
-                    html += '<li class="';
+                    html += '<li ';
                     // set active/inactive classes
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
-                        html += 'revision-active';
+                        html += 'id="revision-active" ';
                         // save the revision ID and log message
                         CKANEXT.MODERATEDEDITS.activeRevisionID = response[i].revision_id;
                         CKANEXT.MODERATEDEDITS.activeRevisionMsg = response[i].message;
                     }
-                    else{
-                        html += 'revision-inactive';
-                    }
                     // set approved class
                     if(response[i].current_approved){
-                        html += ' revision-approved';
+                        html += 'class="revision-approved"';
                     }
                     else{
-                        html += ' revision-not-approved';
+                        html += 'class="revision-not-approved"';
                     }
-                    html += '">';
+                    html += '>';
 
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
                         html += '<span id="revision-active-text">' + revisionDate +  
@@ -256,6 +253,18 @@ CKANEXT.MODERATEDEDITS = {
                 error: error
         }); 
     },
+
+    // if all fields match, highlight the active revision in green
+    checkAllMatch:function(){
+        if($('.shadow-value').length){
+            $('#revision-active').removeClass("revision-active-match");
+            $('#revision-active').addClass("revision-active-nomatch");
+        }
+        else{
+            $('#revision-active').removeClass("revision-active-nomatch");
+            $('#revision-active').addClass("revision-active-match");
+        }
+    },
     
     // update the values of the shadow fields to those of the active revision
     updateShadows:function(){
@@ -306,6 +315,7 @@ CKANEXT.MODERATEDEDITS = {
     // callback for key pressed in an edit box (input, textarea)
     inputValueChanged:function(e){
         CKANEXT.MODERATEDEDITS.matchOrShadow(e.target);
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // when comparing fields, ignore differences in line endings between
@@ -326,7 +336,9 @@ CKANEXT.MODERATEDEDITS = {
         if(inputValue === shadowValue){
             // fields match, so just set css style
             $(field).addClass("revision-match");
-            $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
+            $(field).next("div").fadeOut(CKANEXT.MODERATEDEDITS.fadeTime, function(){
+                $(field).next("div").empty();
+            });
         }
         else{
             // fields don't match - display shadow
@@ -438,5 +450,6 @@ CKANEXT.MODERATEDEDITS = {
         $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
             CKANEXT.MODERATEDEDITS.matchOrShadow(value);
         });
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     }
 };
