@@ -7,6 +7,7 @@ CKANEXT.MODERATEDEDITS = {
     RESOURCES_FIELD: 1,
     EXTRAS_FIELD: 2,
     GROUPS_FIELD: 3,
+    REVISION_LIST_MAX_LENGTH: 10,
 
     // initialisation function, called when the page has finished loading
     init:function(packageName, revisionListURL, revisionDataURL){
@@ -76,6 +77,8 @@ CKANEXT.MODERATEDEDITS = {
         // disable moveup/movedown functionality on resources form for now
         $('a.moveUp').remove();
         $('a.moveDown').remove();
+        // fix width of log message
+        $('#log_message').removeClass("short");
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
@@ -246,7 +249,7 @@ CKANEXT.MODERATEDEDITS = {
         };
 
         var error = function(response){
-            $('#revision-list').append("<li>fail</li>");
+            $('#revision-list').append("<li>Error: could not load revision list.</li>");
         };
 
         $.ajax({method: 'GET',
