@@ -412,6 +412,7 @@ CKANEXT.MODERATEDEDITS = {
         if(fieldName.substr(12) === "__hash"){
             return;
         }
+        var row = $(field).closest("tr");
 
         // need to compare resources based on ID, as their position in the table
         // can vary
@@ -429,16 +430,16 @@ CKANEXT.MODERATEDEDITS = {
         var shadowDesc = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__description'];
 
         if((rURL === shadowURL) && (rFormat === shadowFormat) && (rDesc === shadowDesc)){
-            $(field).closest("tr").find("td").addClass("revision-match-resources");
+            row.find("td").addClass("revision-match-resources");
             // remove shadow if exists
-            if($(field).closest("tr").next().hasClass("resources-shadow")){
-                $(field).closest("tr").next().remove();
+            if(row.next().hasClass("resources-shadow")){
+                row.next().remove();
             }
         }
         else{
-            $(field).closest("tr").find("td").removeClass("revision-match-resources");
+            row.find("td").removeClass("revision-match-resources");
             // add shadow if doesn't already exist
-            if(!$(field).closest("tr").next().hasClass("resources-shadow")){
+            if(!row.next().hasClass("resources-shadow")){
                 var shadowHtml = '<tr id="resources-shadow-' + rID + '" class="resources-shadow">' +
                     '<td class="resource-url shadow-value">' + 
                     // this hidden input tag is needed for the flexitable.js 
@@ -458,14 +459,14 @@ CKANEXT.MODERATEDEDITS = {
                     '<button type="button" id="resources-shadow-replace-' +rID + '">' +
                     'Copy</button></div></td>' +
                     '</tr>';
-                $(field).closest("tr").after(shadowHtml);
+                row.after(shadowHtml);
                 $('#resources-shadow-replace-' + rID).click(CKANEXT.MODERATEDEDITS.copyResourceClicked);
                 $('#resources-shadow-replace-' + rID).button({
                     icons : {primary:'ui-icon-arrowthick-1-n'}
                 });
                 // add a click handler to the 'remove this row' button  
                 // so that we can also remove the shadows
-                var removeButton = $(field).closest("tr").find("a.remove");
+                var removeButton = row.find("a.remove");
                 removeButton.click(this.removeResourceClicked);
             }
         }
