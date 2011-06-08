@@ -79,6 +79,9 @@ CKANEXT.MODERATEDEDITS = {
         $('a.moveDown').remove();
         // fix width of log message
         $('#log_message').removeClass("short");
+        // add a click handler to the 'remove this row' and 'add row to table' 
+        // buttons so that we can update the shadows
+        $('a.remove').click(this.removeResourceClicked);
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
@@ -302,6 +305,17 @@ CKANEXT.MODERATEDEDITS = {
                 CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
             }
         });
+        // TODO: Need to call different functions for different input types, like:
+        // if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+        //    CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
+        //     CKANEXT.MODERATEDEDITS.standardMatchOrShadow(
+        //         field, fieldName, inputValue, shadowValue);
+        // }
+        // else if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+        //    CKANEXT.MODERATEDEDITS.RESOURCES_FIELD){
+        //     CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(
+        //         field, fieldName);
+        // }
     },
 
     // replace field value with current shadow values
@@ -334,8 +348,12 @@ CKANEXT.MODERATEDEDITS = {
 
     // click handler for 'remove this row' button in resources being clicked
     removeResourceClicked:function(e){
+        // remove any shadow for this row
         var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
         $('#resources-shadow-' + rID).remove();
+        // call resourcesMatchOrShadow on the first field in the row (URL)
+        var urlField = $(this).closest("tr").find("td.resource-url").find("input");
+        CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(urlField[0], urlField.attr('name'));
     },
 
     // callback for key pressed in an edit box (input, textarea)
@@ -358,6 +376,9 @@ CKANEXT.MODERATEDEDITS = {
 
     // show match or shadow for standard form inputs (input, textarea, select)
     standardMatchOrShadow:function(field, fieldName, inputValue, shadowValue){
+        inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
+        shadowValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(shadowValue);
+
         if(inputValue === shadowValue){
             // fields match, so just set css style
             $(field).addClass("revision-match");
@@ -377,8 +398,6 @@ CKANEXT.MODERATEDEDITS = {
                 shadow += shadowValue;
             }
             else if(field.nodeName.toLowerCase() === "textarea"){
-                inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
-                shadowValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(shadowValue);
                 var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
                 shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
             }
@@ -467,10 +486,6 @@ CKANEXT.MODERATEDEDITS = {
                 $('#resources-shadow-replace-' + rID).button({
                     icons : {primary:'ui-icon-arrowthick-1-n'}
                 });
-                // add a click handler to the 'remove this row' button  
-                // so that we can also remove the shadows
-                var removeButton = row.find("a.remove");
-                removeButton.click(this.removeResourceClicked);
             }
         }
     },
