@@ -76,9 +76,6 @@ CKANEXT.MODERATEDEDITS = {
         // disable moveup/movedown functionality on resources form for now
         $('a.moveUp').remove();
         $('a.moveDown').remove();
-        // add a click handler to the 'remove this row' button in the resources
-        // area so that we can also remove any shadows
-        $('a.remove').click(this.removeResourceClicked);
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
@@ -444,15 +441,17 @@ CKANEXT.MODERATEDEDITS = {
             if(!$(field).closest("tr").next().hasClass("resources-shadow")){
                 var shadowHtml = '<tr id="resources-shadow-' + rID + '" class="resources-shadow">' +
                     '<td class="resource-url shadow-value">' + 
-                    '<input readonly="readonly" type="text" class="short" ' +
-                    'name="resources-shadow__' + shadowNumber + '__url" ' + 
-                    'value="' + shadowURL + '"/></td>' +
+                    // this hidden input tag is needed for the flexitable.js 
+                    // removeRow function to work properly
+                    '<input type="hidden" name="resources-shadow__' + shadowNumber + '__url" />' +
+                    '<div class="shadow-value-short wordwrap">' + shadowURL + '</div>' +
+                    '</td>' +
                     '<td class="resource-format shadow-value">' + 
-                    '<input readonly="readonly" type="text" class="short" ' + 
-                    'value="' + shadowFormat + '"/></td>' +
+                    '<div class="shadow-value-short wordwrap">' + shadowFormat + '</div>' +
+                    '</td>' +
                     '<td class="resource-description shadow-value">' + 
-                    '<input readonly="readonly" type="text" class="medium-width" ' + 
-                    'value="' + shadowDesc + '"/></td>' +
+                    '<div class="shadow-value-medium wordwrap">' + shadowDesc + '</div>' +
+                    '</td>' +
                     '<td class="resource-hash"></td>' +
                     '<td class="resource-id"></td>' +
                     '<td><div class="controls">' +
@@ -464,6 +463,10 @@ CKANEXT.MODERATEDEDITS = {
                 $('#resources-shadow-replace-' + rID).button({
                     icons : {primary:'ui-icon-arrowthick-1-n'}
                 });
+                // add a click handler to the 'remove this row' button  
+                // so that we can also remove the shadows
+                var removeButton = $(field).closest("tr").find("a.remove");
+                removeButton.click(this.removeResourceClicked);
             }
         }
     },
