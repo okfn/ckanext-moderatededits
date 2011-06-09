@@ -47,11 +47,15 @@ CKANEXT.MODERATEDEDITS = {
             }
             CKANEXT.MODERATEDEDITS.formInputTypes[$(value).attr('name')] = inputType;
         });
-        // Add the 'resources added' section
+        // Add the 'resources added' and 'resources removed' sections
         var resourcesAdded = '<div id="resources-added">' +
             '<h3>Resources Added</h3>' +
             '<table class="flexitable"><tbody></tbody></table></div>';
         $("div.instructions.basic").prev("p.flexitable").before(resourcesAdded);
+        var resourcesRemoved = '<div id="resources-removed">' +
+            '<h3>Resources Removed</h3>' +
+            '<table class="flexitable"><tbody></tbody></table></div>';
+        $("#resources-added").next("p").after(resourcesRemoved);
         // resources field name regex
         this.fieldNameRegex = /^(\S+)__(\d+)__(\S+)$/; 
 
@@ -79,17 +83,9 @@ CKANEXT.MODERATEDEDITS = {
                 'value="Approve" />';
             $('.submit input[name="save"]').after(saveModHtml);
         }
-
         // change default preview/submit buttons to match style
         $('.submit input[name="preview"]').button(); 
         $('.submit input[name="save"]').button(); 
-        // add new button for saving a moderated version
-        if(this.isModerator){
-            var saveModHtml = ' <input name="save-approved" type="submit" ' +
-                'value="Save And Approve" />';
-            $('.submit input[name="save"]').after(saveModHtml);
-            $('.submit input[name="save-approved"]').button();
-        }
         // disable moveup/movedown functionality on resources form for now
         $('a.moveUp').remove();
         $('a.moveDown').remove();
@@ -360,6 +356,23 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
     },
 
+    resourcesReplaceRemovedClicked:function(e){
+        var rID = $(this).closest("tr").attr('id').substr("resources-shadow-".length);
+
+        var table = $(this).closest("fieldset").find("table").first();
+        console.log(table);
+        var lastRow = table.find('tr:last');
+        var clone = lastRow.clone(true);
+        clone.insertAfter(lastRow).find('input').val('');
+        CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
+            clone, CKANEXT.MODERATEDEDITS.resourceGetRowNumber(lastRow) + 1);
+        // TODO: set row numbers in all 'resources added' rows too
+
+        // set new row values to shadow values
+        // clone.find(".resources-url").find("input").val('test');
+        CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
+    },
+
     resourceGetRowNumber:function(tr){
         var rowNumber = $(tr).find('input').attr('name').match(
             CKANEXT.MODERATEDEDITS.fieldNameRegex)[2];
@@ -597,32 +610,54 @@ CKANEXT.MODERATEDEDITS = {
             $('#resources-added').hide();
         }
 
-        // find last row of table to add in shadows for deleted resources
-        // var legends = $('legend');
-        // for(var i = 0; i < legends.length; i++){
-        //     if($(legends[i]).text() === "Resources"){
-        //         var tbody = $(legends[i]).closest("fieldset").find("tbody");
-        //         break;
-        //     }
-        // }
-        // var lastRow = $(tbody.children()[numResources]);
+        // check for resources removed since shadow revision
+        var resourcesRemoved = "";
+        for(var i in CKANEXT.MODERATEDEDITS.shadowResourceNumbers){
+            if(resourceNumbers[i] === undefined){
+                var n = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[i];
 
-        // // check for resources removed since shadow revision
-        // for(var i in CKANEXT.MODERATEDEDITS.shadowResourceNumbers){
-        //     if(resourceNumbers[i] === undefined){
-        //         console.log('removed: ' + CKANEXT.MODERATEDEDITS.shadowResourceNumbers[i]);
-
-        //         // add a shadow for this resource if one doesn't exist already
-        //         var rowHtml = '<tr>' +
-        //             '<td>deleted row </td>' + 
-        //             '</tr>';
-        //         lastRow.before(rowHtml);
-        //     }
-        // }
+                resourcesRemoved += '<tr class="resources-shadow" ' +
+                    'id="resources-shadow-' + i + '">' +
+                    '<td class="shadow-value resources-url">' +
+                    '<div class="shadow-value-short wordwrap">' +
+                    CKANEXT.MODERATEDEDITS.shadows["resources__" + n + "__url"] + 
+                    '</div></td>' + 
+                    '<td class="shadow-value resources-format">' +
+                    '<div class="shadow-value-short wordwrap">' +
+                    CKANEXT.MODERATEDEDITS.shadows["resources__" + n + "__format"] + 
+                    '</div></td>' + 
+                    '<td class="shadow-value resources-description">' +
+                    '<div class="shadow-value-medium wordwrap">' +
+                    CKANEXT.MODERATEDEDITS.shadows["resources__" + n + "__description"] + 
+                    '</div></td>' + 
+                    '</td>' + 
+                    '<td class="resource-hash"></td>' +
+                    '<td class="resource-id"></td>' +
+                    '<td><div class="controls">' +
+                    '<button type="button" class="resources-shadow-replace-removed">' +
+                    'Add</button></div></td>' +
+                    '</tr>';
+            }
+        }
+        if(resourcesRemoved != ""){
+            $('#resources-removed').find("tbody").empty().append(resourcesRemoved);
+            $('#resources-removed').show();
+        }
+        else{
+            $('#resources-removed').find("tr").remove();
+            $('#resources-removed').hide();
+        }
 
         // add click handlers for 'remove row' buttons
         $('a.remove').unbind('click');
         $('a.remove').click(CKANEXT.MODERATEDEDITS.removeResourceClicked);
+        // add click handlers for 'Add bac' buttons
+        $('button.resources-shadow-replace-removed').unbind('click');
+        $('button.resources-shadow-replace-removed').click(
+            CKANEXT.MODERATEDEDITS.resourcesReplaceRemovedClicked);
+        $('button.resources-shadow-replace-removed').button({
+            icons : {primary:'ui-icon-arrowthick-1-n'}
+        });
     },
 
     // input value changed, update match/shadow status
