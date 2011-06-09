@@ -31,7 +31,6 @@ Todo / Roadmap
 * Do some JS validation on 'edit summary' field (the revision commit message)
 * Add code to handle package resources 
 * Add code to handle package extras 
-* Add code to handle package groups 
 
 Tests
 -----

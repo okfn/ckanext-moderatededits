@@ -52,6 +52,8 @@ CKANEXT.MODERATEDEDITS = {
             '<h3>Resources Added</h3>' +
             '<table class="flexitable"><tbody></tbody></table></div>';
         $("div.instructions.basic").prev("p.flexitable").before(resourcesAdded);
+        // resources field name regex
+        this.fieldNameRegex = /^(\S+)__(\d+)__(\S+)$/; 
 
         // default active revision is the latest one
         this.activeRevision = 0;
@@ -84,9 +86,6 @@ CKANEXT.MODERATEDEDITS = {
         $('a.moveDown').remove();
         // fix width of log message
         $('#log_message').removeClass("short");
-        // add a click handler to the 'remove this row' and 'add row to table' 
-        // buttons so that we can update the shadows
-        $('a.remove').click(this.removeResourceClicked);
 
         // callback handler for form fields being changed
         this.formInputs.change(this.inputValueChanged);
@@ -352,12 +351,38 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
     },
 
+    resourceGetRowNumber:function(tr){
+        var rowNumber = $(tr).find('input').attr('name').match(
+            CKANEXT.MODERATEDEDITS.fieldNameRegex)[2];
+        return parseInt(rowNumber, 10);
+    },
+
+    resourceSetRowNumber:function(tr, num){
+        $(tr).find('input').each(function(){
+            $(this).attr({
+                id:   $(this).attr('id').replace(CKANEXT.MODERATEDEDITS.fieldNameRegex, "$1__" + num + "__$3"),
+                name: $(this).attr('name').replace(CKANEXT.MODERATEDEDITS.fieldNameRegex, "$1__" + num + "__$3")
+            });
+        });
+    },
+
     // click handler for 'remove this row' button in resources being clicked
     removeResourceClicked:function(e){
-        // remove any shadow for this row
-        var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
-        $('#resources-shadow-' + rID).remove();
-        CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
+        if(confirm('Are you sure you wish to remove this row?')){
+            var row = $(this).parents('tr');
+            var following = row.nextAll();
+
+            row.remove();
+            following.each(function(){
+                CKANEXT.MODERATEDEDITS.setRowNumber(this, 
+                    CKANEXT.MODERATEDEDITS.getRowNumber(this) - 1);
+            });
+
+            // remove any shadow for this row
+            var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
+            $('#resources-shadow-' + rID).remove();
+            CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
+        }
     },
 
     // callback for key pressed in an edit box (input, textarea)
@@ -584,6 +609,10 @@ CKANEXT.MODERATEDEDITS = {
         //         lastRow.before(rowHtml);
         //     }
         // }
+
+        // add click handlers for 'remove row' buttons
+        $('a.remove').unbind('click');
+        $('a.remove').click(CKANEXT.MODERATEDEDITS.removeResourceClicked);
     },
 
     // input value changed, update match/shadow status
