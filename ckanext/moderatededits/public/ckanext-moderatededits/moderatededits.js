@@ -210,8 +210,15 @@ CKANEXT.MODERATEDEDITS = {
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
                         html += '<span id="revision-active-text">' + revisionDate +  
                                 '</span>' +
+                                '<div class="revision-list-buttons">' +
                                 '<button id="revision-replace-all"' + 
                                 ' title="Replace all fields with values from this revision"></button>' +
+                                '<button id="revision-toggle-info"' + 
+                                ' title="Display the commit message for this revision"></button>' +
+                                '</div>' +
+                                '<div id="revision-commit-message">' +
+                                response[i].message +
+                                '</div>' +
                                 '<div id="revision-replace-all-warning"' +
                                 ' title="Replace all fields with values from this revision?">' +
                                 'This action will replace any changes that you have made to ' +
@@ -250,6 +257,13 @@ CKANEXT.MODERATEDEDITS = {
                 });
                 $('#revision-replace-all').click(function(){
                     $('#revision-replace-all-warning').dialog('open');
+                });
+                // add button and click handler for info button
+                $('#revision-toggle-info').button({
+                    text: false, icons : {primary:'ui-icon-info'}
+                });
+                $('#revision-toggle-info').click(function(){
+                    $('#revision-commit-message').slideToggle();
                 });
             }
 

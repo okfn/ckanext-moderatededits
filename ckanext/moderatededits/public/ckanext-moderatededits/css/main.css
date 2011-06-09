@@ -34,22 +34,33 @@
 }
 
 /* Revisions list */
+#main .widget-area ul ul { margin: 0; }
 #revision-list-widget {
     margin-top: 58px;
-    width:198px;
-
+    width: 198px;
 }
-
 #revision-list-widget div {
     margin-top: 1em; 
+}
+#revision-list-widget ul {
+    list-style-type: none; 
+    text-indent: 0;
+    margin: 0;
 }
 #revision-list-widget h3 {
     color: #000;
     margin-bottom: 1em;
 }
+#revision-list li { width: 175px; }
 #revision-list { margin: 0; }
-#revision-replace-all { padding: 4px; margin-left: 2em; vertical-align: middle; }
+#revision-list button { 
+    margin: 0 1em 0 0; 
+    padding: 4px; 
+    vertical-align: middle; 
+}
+.revision-list-buttons { padding-left: 5px; }
 #revision-replace-all-warning { display: none; }
+#revision-commit-message { display: none; }
 li.revision-approved:before {
     content: "* ";
     color: #b00;
