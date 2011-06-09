@@ -363,7 +363,20 @@ CKANEXT.MODERATEDEDITS = {
         var table = $(this).closest("fieldset").find("table").first();
         var lastRow = table.find('tr:last');
         var clone = lastRow.clone(true);
-        clone.insertAfter(lastRow).find('input').val('');
+        clone.insertAfter(lastRow);
+
+        // set new row values to shadow values
+        // 
+        // use the native setAttribute function here, as jQuery's .val() or
+        // .attr('value') don't actually change the html for value attributes
+        clone.find(".resource-url").find("input")[0].setAttribute("value",
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__url"]);
+        clone.find(".resource-format").find("input")[0].setAttribute("value",
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__format"]);
+        clone.find(".resource-description").find("input")[0].setAttribute("value",
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__description"]);
+        clone.find(".resource-id").find("input")[0].setAttribute("value", rID);
+
         CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
             clone, CKANEXT.MODERATEDEDITS.resourceGetRowNumber(lastRow) + 1);
         // set row numbers in all 'resources added' rows too
@@ -372,15 +385,6 @@ CKANEXT.MODERATEDEDITS = {
             CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
                 addedRows[i], CKANEXT.MODERATEDEDITS.resourceGetRowNumber(addedRows[i]) + 1);
         }
-
-        // set new row values to shadow values
-        clone.find(".resource-url").find("input").val(
-            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__url"]);
-        clone.find(".resource-format").find("input").val(
-            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__format"]);
-        clone.find(".resource-description").find("input").val(
-            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__description"]);
-        clone.find(".resource-id").find("input").val(rID);
 
         CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
@@ -405,13 +409,11 @@ CKANEXT.MODERATEDEDITS = {
         if(confirm('Are you sure you wish to remove this row?')){
             var row = $(this).parents('tr');
             var following = row.nextAll();
-
             row.remove();
             following.each(function(){
                 CKANEXT.MODERATEDEDITS.resourcesSetRowNumber(this, 
                     CKANEXT.MODERATEDEDITS.resourcesGetRowNumber(this) - 1);
             });
-
             // remove any shadow for this row
             var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
             $('#resources-shadow-' + rID).remove();
@@ -588,7 +590,6 @@ CKANEXT.MODERATEDEDITS = {
                         resourceNumbers[i] + '__url"]').closest("tr");
 
             if(CKANEXT.MODERATEDEDITS.shadowResourceNumbers[i] === undefined){
-                // add a shadow for this resource if one doesn't exist already
                 row.find("td").removeClass("revision-match-resources");
                 row.find("td").addClass("shadow-value");
                 row.find("td").addClass("resources-shadow-added");
