@@ -291,10 +291,12 @@ CKANEXT.MODERATEDEDITS = {
         if($('.shadow-value').length){
             $('#revision-active').removeClass("revision-active-match");
             $('#revision-active').addClass("revision-active-nomatch");
+            $('#revision-list-new-revision').fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
         }
         else{
             $('#revision-active').removeClass("revision-active-nomatch");
             $('#revision-active').addClass("revision-active-match");
+            $('#revision-list-new-revision').fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
         }
     },
     

@@ -69,6 +69,15 @@ li.revision-approved:before {
 li.revision-approved { padding: 10px 15px 10px 5px; }
 li.revision-not-approved { padding: 10px 15px 10px 15px; }
 .revision-approved-marker { color: #b00; }
+#revision-list-new-revision {
+    display: none;
+}
+#revision-list-new-revision li {
+    padding: 10px 15px 10px 15px; 
+    border: 1px solid #e7e7e7; 
+    margin-bottom: 1em;
+}
+.revision-approved-marker { color: #b00; }
 
 /* Edit form */
 #package-edit table { 
