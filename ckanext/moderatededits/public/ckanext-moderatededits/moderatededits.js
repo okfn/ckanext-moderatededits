@@ -192,7 +192,7 @@ CKANEXT.MODERATEDEDITS = {
                     //
                     // For now: truncate the timestamp to get the date.
                     // Want YYYY-MM-DD so take the first 10 characters.
-                    var revisionDate = response[i].timestamp.substr(0, 10);
+                    var revisionDate = response[i].timestamp;
 
                     html += '<li ';
                     // set active/inactive classes
