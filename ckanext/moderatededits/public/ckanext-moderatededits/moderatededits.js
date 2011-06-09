@@ -389,6 +389,13 @@ CKANEXT.MODERATEDEDITS = {
         }
 
         // add deleted rows
+        rows = $('#resources-removed').find("tr");
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("resources-shadow")){
+                var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
+                CKANEXT.MODERATEDEDITS.resourcesReplaceRemoved(rID);
+            }
+        }
         
         CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
@@ -405,11 +412,23 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
     },
 
-    resourcesReplaceRemovedClicked:function(e){
-        var rID = $(this).closest("tr").attr('id').substr("resources-shadow-".length);
-        var n = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
+    resourcesReplaceRemoved:function(id){
+        var n = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[id];
 
-        var table = $(this).closest("fieldset").find("table").first();
+        // TODO: replace this when fieldsets have IDs
+        var legends = $('#package-edit legend');
+        var table = undefined;
+        for(var i = 0; i < legends.length; i++){
+            if($(legends[i]).text() === "Resources"){
+                table = $(legends[i]).closest("fieldset").find("table").first();
+                break;
+            }
+        }
+        if(!table){
+            // can't find resources table
+            return;
+        }
+
         var lastRow = table.find('tr:last');
         var clone = lastRow.clone(true);
         clone.insertAfter(lastRow);
@@ -424,7 +443,7 @@ CKANEXT.MODERATEDEDITS = {
             CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__format"]);
         clone.find(".resource-description").find("input")[0].setAttribute("value",
             CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__description"]);
-        clone.find(".resource-id").find("input")[0].setAttribute("value", rID);
+        clone.find(".resource-id").find("input")[0].setAttribute("value", id);
 
         CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
             clone, CKANEXT.MODERATEDEDITS.resourceGetRowNumber(lastRow) + 1);
@@ -434,7 +453,11 @@ CKANEXT.MODERATEDEDITS = {
             CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
                 addedRows[i], CKANEXT.MODERATEDEDITS.resourceGetRowNumber(addedRows[i]) + 1);
         }
+    },
 
+    resourcesReplaceRemovedClicked:function(e){
+        var rID = $(this).closest("tr").attr('id').substr("resources-shadow-".length);
+        CKANEXT.MODERATEDEDITS.resourcesReplaceRemoved(rID);
         CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
 
