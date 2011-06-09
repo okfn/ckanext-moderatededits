@@ -358,18 +358,30 @@ CKANEXT.MODERATEDEDITS = {
 
     resourcesReplaceRemovedClicked:function(e){
         var rID = $(this).closest("tr").attr('id').substr("resources-shadow-".length);
+        var n = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
 
         var table = $(this).closest("fieldset").find("table").first();
-        console.log(table);
         var lastRow = table.find('tr:last');
         var clone = lastRow.clone(true);
         clone.insertAfter(lastRow).find('input').val('');
         CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
             clone, CKANEXT.MODERATEDEDITS.resourceGetRowNumber(lastRow) + 1);
-        // TODO: set row numbers in all 'resources added' rows too
+        // set row numbers in all 'resources added' rows too
+        var addedRows = $("#resources-added").find("tr");
+        for(var i = 0; i < addedRows.length; i++){
+            CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
+                addedRows[i], CKANEXT.MODERATEDEDITS.resourceGetRowNumber(addedRows[i]) + 1);
+        }
 
         // set new row values to shadow values
-        // clone.find(".resources-url").find("input").val('test');
+        clone.find(".resource-url").find("input").val(
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__url"]);
+        clone.find(".resource-format").find("input").val(
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__format"]);
+        clone.find(".resource-description").find("input").val(
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__description"]);
+        clone.find(".resource-id").find("input").val(rID);
+
         CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
 
