@@ -98,4 +98,9 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
     background-color: #f0f0f0; 
     padding-left: 10px;
 }
+#package-edit td.resources-shadow-removed { 
+    background-color: #f0f0f0; 
+    padding-left: 10px;
+}
 #resources-added { display: none; }
+#resources-removed { display: none; }
