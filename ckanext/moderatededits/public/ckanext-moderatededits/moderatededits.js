@@ -411,8 +411,8 @@ CKANEXT.MODERATEDEDITS = {
             var following = row.nextAll();
             row.remove();
             following.each(function(){
-                CKANEXT.MODERATEDEDITS.resourcesSetRowNumber(this, 
-                    CKANEXT.MODERATEDEDITS.resourcesGetRowNumber(this) - 1);
+                CKANEXT.MODERATEDEDITS.resourceSetRowNumber(this, 
+                    CKANEXT.MODERATEDEDITS.resourceGetRowNumber(this) - 1);
             });
             // remove any shadow for this row
             var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
@@ -556,6 +556,8 @@ CKANEXT.MODERATEDEDITS = {
                 });
             }
         }
+
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // checks for differences between the current list of resources and 
@@ -671,6 +673,9 @@ CKANEXT.MODERATEDEDITS = {
         $('button.resources-shadow-replace-removed').button({
             icons : {primary:'ui-icon-arrowthick-1-n'}
         });
+
+
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // input value changed, update match/shadow status
