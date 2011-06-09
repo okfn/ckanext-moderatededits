@@ -70,6 +70,15 @@ CKANEXT.MODERATEDEDITS = {
         $('a#revision-show-mod-info').click(this.showModInfoClicked);
         // add click handler for 'select latest revision' link in info box
         $('a#revision-select-latest').click(this.latestApprovedClicked);
+        //add the input so backend knows this is a revision submit
+        hidden_input = '<input name="moderated" value="True" type="hidden">';
+        $('.submit input[name="preview"]').before(hidden_input); 
+        // add new button for saving a moderated version
+        if(this.isModerator){
+            var saveModHtml = ' <input name="save" type="submit" ' +
+                'value="Approve" />';
+            $('.submit input[name="save"]').after(saveModHtml);
+        }
 
         // change default preview/submit buttons to match style
         $('.submit input[name="preview"]').button(); 
@@ -194,7 +203,7 @@ CKANEXT.MODERATEDEDITS = {
                         CKANEXT.MODERATEDEDITS.activeRevisionMsg = response[i].message;
                     }
                     // set approved class
-                    if(response[i].current_approved){
+                    if(response[i].approved){
                         html += 'class="revision-approved"';
                     }
                     else{
@@ -428,6 +437,7 @@ CKANEXT.MODERATEDEDITS = {
             }
             else if(field.nodeName.toLowerCase() === "textarea"){
                 var d = CKANEXT.MODERATEDEDITS.dmp.diff_main(shadowValue, inputValue);
+                CKANEXT.MODERATEDEDITS.dmp.diff_cleanupSemantic(d);
                 shadow += CKANEXT.MODERATEDEDITS.dmp.diff_prettyHtml(d);
             }
             else if(field.nodeName.toLowerCase() === "select"){
