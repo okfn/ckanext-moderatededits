@@ -383,8 +383,8 @@ CKANEXT.MODERATEDEDITS = {
 
             row.remove();
             following.each(function(){
-                CKANEXT.MODERATEDEDITS.setRowNumber(this, 
-                    CKANEXT.MODERATEDEDITS.getRowNumber(this) - 1);
+                CKANEXT.MODERATEDEDITS.resourcesSetRowNumber(this, 
+                    CKANEXT.MODERATEDEDITS.resourcesGetRowNumber(this) - 1);
             });
 
             // remove any shadow for this row
