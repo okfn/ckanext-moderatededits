@@ -57,3 +57,13 @@ REVISION_LIST_CODE = """
     </div>
 </div>
 """
+
+RESOURCES_ADDED_CODE = """
+<div id="resources-added">
+    <h3>Resources Added</h3>
+    <table>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+"""

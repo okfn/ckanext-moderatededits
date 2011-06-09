@@ -94,3 +94,8 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
    word-wrap: break-word;      /* IE */
 }
 #package-edit .controls { width: 6em; }
+#package-edit td.resources-shadow-added { 
+    background-color: #f0f0f0; 
+    padding-left: 10px;
+}
+#resources-added { display: none; }

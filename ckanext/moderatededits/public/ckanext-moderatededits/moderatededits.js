@@ -47,6 +47,11 @@ CKANEXT.MODERATEDEDITS = {
             }
             CKANEXT.MODERATEDEDITS.formInputTypes[$(value).attr('name')] = inputType;
         });
+        // Add the 'resources added' section
+        var resourcesAdded = '<div id="resources-added">' +
+            '<h3>Resources Added</h3>' +
+            '<table class="flexitable"><tbody></tbody></table></div>';
+        $("div.instructions.basic").prev("p.flexitable").before(resourcesAdded);
 
         // default active revision is the latest one
         this.activeRevision = 0;
@@ -280,6 +285,7 @@ CKANEXT.MODERATEDEDITS = {
         var success = function(data){
             CKANEXT.MODERATEDEDITS.shadows = data;
             // save resource number based on ID
+            CKANEXT.MODERATEDEDITS.shadowResourceNumbers = {};
             for(var i in data){
                 if((i.substr(0, 11) === 'resources__') &&
                    (i.substr(12) === '__id')){
@@ -308,7 +314,7 @@ CKANEXT.MODERATEDEDITS = {
         // TODO: Need to call different functions for different input types, like:
         // if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
         //    CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
-        //     CKANEXT.MODERATEDEDITS.standardMatchOrShadow(
+        //     CKANEXT.MODERATEDEDITS.standardFieldChanged(
         //         field, fieldName, inputValue, shadowValue);
         // }
         // else if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
@@ -323,7 +329,7 @@ CKANEXT.MODERATEDEDITS = {
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
         var field = $('[name=' + fieldName + ']');
         field.val(shadowValue);
-        CKANEXT.MODERATEDEDITS.matchOrShadow(field[0]);
+        CKANEXT.MODERATEDEDITS.checkField(field[0]);
     },
 
     // replace a row in the resource table with its current shadow values
@@ -351,14 +357,12 @@ CKANEXT.MODERATEDEDITS = {
         // remove any shadow for this row
         var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
         $('#resources-shadow-' + rID).remove();
-        // call resourcesMatchOrShadow on the first field in the row (URL)
-        var urlField = $(this).closest("tr").find("td.resource-url").find("input");
-        CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(urlField[0], urlField.attr('name'));
+        CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
 
     // callback for key pressed in an edit box (input, textarea)
     inputValueChanged:function(e){
-        CKANEXT.MODERATEDEDITS.matchOrShadow(e.target);
+        CKANEXT.MODERATEDEDITS.checkField(e.target);
     },
 
     // when comparing fields, ignore differences in line endings between
@@ -375,7 +379,7 @@ CKANEXT.MODERATEDEDITS = {
     },
 
     // show match or shadow for standard form inputs (input, textarea, select)
-    standardMatchOrShadow:function(field, fieldName, inputValue, shadowValue){
+    standardFieldChanged:function(field, fieldName, inputValue, shadowValue){
         inputValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(inputValue);
         shadowValue = CKANEXT.MODERATEDEDITS.normaliseLineEndings(shadowValue);
 
@@ -428,23 +432,25 @@ CKANEXT.MODERATEDEDITS = {
         }
     },
 
-    // show match or shadow for resources section
-    resourcesMatchOrShadow:function(field, fieldName){
+    // Called when a field in the resources area is edited. Check match/shadow status
+    resourcesFieldChanged:function(field, fieldName){
         // ignore the resources__N__hash field
         if(fieldName.substr(12) === "__hash"){
             return;
         }
+    
+        // get the row that was edited
         var row = $(field).closest("tr");
+        var rowNumber = fieldName.charAt(11); // length of 'resources__'
 
         // need to compare resources based on ID, as their position in the table
         // can vary
         //
         // show a match if all items in the resource row are equal (not just this field)
-        var rNumber = fieldName.charAt(11); // length of 'resources__'
-        var rID = $('input[name="resources__' + rNumber + '__id"]').attr('value');
-        var rURL = $('input[name="resources__' + rNumber + '__url"]').val();
-        var rFormat = $('input[name="resources__' + rNumber + '__format"]').val();
-        var rDesc = $('input[name="resources__' + rNumber + '__description"]').val();
+        var rID = $('input[name="resources__' + rowNumber + '__id"]').attr('value');
+        var rURL = $('input[name="resources__' + rowNumber + '__url"]').val();
+        var rFormat = $('input[name="resources__' + rowNumber + '__format"]').val();
+        var rDesc = $('input[name="resources__' + rowNumber + '__description"]').val();
 
         var shadowNumber = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
         var shadowURL = CKANEXT.MODERATEDEDITS.shadows['resources__' + shadowNumber + '__url'];
@@ -490,9 +496,98 @@ CKANEXT.MODERATEDEDITS = {
         }
     },
 
-    // find out whether this field uses the standard match/shadow, or one of the
-    // custom views
-    matchOrShadow:function(field){
+    // checks for differences between the current list of resources and 
+    // the shadow list
+    //
+    // only displays shadows for added/removed rows, edit rows are handled by the
+    // resourcesFieldChanged function
+    resourcesAddedOrRemoved:function(){
+        // get list of current resources by ID
+        var resourceFields = $('#package-edit input[name^="resources__"]');
+        var resourceNumbers = {};
+        var numResources = 0;
+        var blankIDs = [];
+        for(var i = 0; i <  resourceFields.length; i++){
+            var name = $(resourceFields[i]).attr('name');
+            if(name.substr(12) === "__id"){
+                var rID = $(resourceFields[i]).attr('value');
+                if(rID){
+                    resourceNumbers[rID] = name.charAt(11);
+                    numResources++;
+                }
+                else{
+                    blankIDs.push(name);
+                }
+            }
+        }
+
+        // check for resources added since shadow revision
+        var resourcesAdded = "";
+        for(var i in resourceNumbers){
+            var row = $('#package-edit input[name="resources__' + 
+                        resourceNumbers[i] + '__url"]').closest("tr");
+
+            if(CKANEXT.MODERATEDEDITS.shadowResourceNumbers[i] === undefined){
+                // add a shadow for this resource if one doesn't exist already
+                row.find("td").removeClass("revision-match-resources");
+                row.find("td").addClass("shadow-value");
+                row.find("td").addClass("resources-shadow-added");
+                resourcesAdded += '<tr class="resources-shadow">' + 
+                    row.html() + '</tr>';
+                row.remove();
+            }
+            else{
+                // make sure this is in the standard resources table
+                if(row.hasClass("resources-shadow")){
+                    row.find("td").addClass("revision-match-resources");
+                    row.find("td").removeClass("shadow-value");
+                    row.find("td").removeClass("resources-shadow-added");
+                    $("#resources-added").prev("table").find("tbody").append(
+                        '<tr>' + row.html() + '</tr>');
+                    row.remove();
+                }
+            }
+        }
+        // move any blank rows to new 'resources added' section
+        for(var i = 0; i < blankIDs.length; i++){
+            var row = $('input[name="' + blankIDs[i] + '"]').closest("tr");
+            resourcesAdded += '<tr>' + row.html() + '</tr>';
+            row.remove();
+        }
+        if(resourcesAdded != ""){
+            $('#resources-added').find("tbody").empty().append(resourcesAdded);
+            $('#resources-added').show();
+        }
+        else{
+            $('#resources-added').hide();
+        }
+
+        // find last row of table to add in shadows for deleted resources
+        // var legends = $('legend');
+        // for(var i = 0; i < legends.length; i++){
+        //     if($(legends[i]).text() === "Resources"){
+        //         var tbody = $(legends[i]).closest("fieldset").find("tbody");
+        //         break;
+        //     }
+        // }
+        // var lastRow = $(tbody.children()[numResources]);
+
+        // // check for resources removed since shadow revision
+        // for(var i in CKANEXT.MODERATEDEDITS.shadowResourceNumbers){
+        //     if(resourceNumbers[i] === undefined){
+        //         console.log('removed: ' + CKANEXT.MODERATEDEDITS.shadowResourceNumbers[i]);
+
+        //         // add a shadow for this resource if one doesn't exist already
+        //         var rowHtml = '<tr>' +
+        //             '<td>deleted row </td>' + 
+        //             '</tr>';
+        //         lastRow.before(rowHtml);
+        //     }
+        // }
+    },
+
+    // input value changed, update match/shadow status
+    checkField:function(field){
         var fieldName = $(field).attr("name");
         var inputValue = $(field).val();
         var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
@@ -504,13 +599,12 @@ CKANEXT.MODERATEDEDITS = {
 
         if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
            CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
-            CKANEXT.MODERATEDEDITS.standardMatchOrShadow(
+            CKANEXT.MODERATEDEDITS.standardFieldChanged(
                 field, fieldName, inputValue, shadowValue);
         }
         else if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
            CKANEXT.MODERATEDEDITS.RESOURCES_FIELD){
-            CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(
-                field, fieldName);
+            CKANEXT.MODERATEDEDITS.resourcesFieldChanged(field, fieldName);
         }
 
         CKANEXT.MODERATEDEDITS.checkAllMatch();
@@ -519,8 +613,9 @@ CKANEXT.MODERATEDEDITS = {
     // show either shadows or matches for all fields
     allMatchesAndShadows:function(){
         $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
-            CKANEXT.MODERATEDEDITS.matchOrShadow(value);
+            CKANEXT.MODERATEDEDITS.checkField(value);
         });
+        CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
         CKANEXT.MODERATEDEDITS.checkAllMatch();
     }
 };
