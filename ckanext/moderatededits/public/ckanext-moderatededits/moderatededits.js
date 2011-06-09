@@ -32,6 +32,7 @@ CKANEXT.MODERATEDEDITS = {
         // resources start with 'resources__', extras with 'extras__', etc.
         this.formInputTypes = {}
         $.each(this.formInputs, function(index, value){
+            // TODO: replace this when fieldsets have IDs
             var legend = $(value).closest('fieldset').children('legend').text();
             if(legend === 'Resources'){
                 var inputType = CKANEXT.MODERATEDEDITS.RESOURCES_FIELD;
@@ -359,23 +360,37 @@ CKANEXT.MODERATEDEDITS = {
         // replace edited rows
         // TODO: replace this when fieldsets have IDs
         var legends = $('#package-edit legend');
+        var fieldset = undefined;
         var rows = [];
         for(var i = 0; i < legends.length; i++){
             if($(legends[i]).text() === "Resources"){
-                rows = $(legends[i]).closest("fieldset").find("table").first()
-                    .find("tbody").find("tr");
+                fieldset = $(legends[i]).closest("fieldset");
+                break;
             }
         }
+        if(!fieldset){
+            // can't find resources fieldset
+            return;
+        }
+        rows = fieldset.find("table").first().find("tbody").find("tr");
         for(var i = 0; i < rows.length; i++){
             if($(rows[i]).hasClass("resources-shadow")){
-                console.log(rows[i]);
                 var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
                 CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
             }
         }
 
         // remove added rows
+        rows = $('#resources-added').find("tr");
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("resources-shadow")){
+                $(rows[i]).remove();
+            }
+        }
+
         // add deleted rows
+        
+        CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
 
     // click handler for 'copy value to field' button in shadow area
