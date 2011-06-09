@@ -62,7 +62,6 @@ CKANEXT.MODERATEDEDITS = {
         // default active revision is the latest one
         this.activeRevision = 0;
         this.activeRevisionID = null;
-        this.activeRevisionMsg = null;
         this.revisions = null;
         this.lastApproved = 0;
         this.shadows = {};
@@ -196,7 +195,6 @@ CKANEXT.MODERATEDEDITS = {
                         html += 'id="revision-active" ';
                         // save the revision ID and log message
                         CKANEXT.MODERATEDEDITS.activeRevisionID = response[i].revision_id;
-                        CKANEXT.MODERATEDEDITS.activeRevisionMsg = response[i].message;
                     }
                     // set approved class
                     if(response[i].approved){
@@ -208,6 +206,10 @@ CKANEXT.MODERATEDEDITS = {
                     html += '>';
 
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
+                        var commitMessage = response[i].message;
+                        if(commitMessage === ""){
+                            commitMessage = "There was no commit message for this revision";
+                        }
                         html += '<span id="revision-active-text">' + revisionDate +  
                                 '</span>' +
                                 '<div class="revision-list-buttons">' +
@@ -216,9 +218,7 @@ CKANEXT.MODERATEDEDITS = {
                                 '<button id="revision-toggle-info"' + 
                                 ' title="Display the commit message for this revision"></button>' +
                                 '</div>' +
-                                '<div id="revision-commit-message">' +
-                                response[i].message +
-                                '</div>' +
+                                '<div id="revision-commit-message">' + commitMessage + '</div>' +
                                 '<div id="revision-replace-all-warning"' +
                                 ' title="Replace all fields with values from this revision?">' +
                                 'This action will replace any changes that you have made to ' +
