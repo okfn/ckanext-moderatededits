@@ -12,6 +12,7 @@
 #revision-info { 
     padding: 0; 
     display: none; 
+    margin-top: 30px;
 }
 #revision-info h3 {
     border-bottom: 1px solid #e7e7e7;
@@ -33,7 +34,15 @@
 }
 
 /* Revisions list */
-#revision-list-widget div { margin-top: 1em; }
+#revision-list-widget {
+    margin-top: 58px;
+    width:198px;
+
+}
+
+#revision-list-widget div {
+    margin-top: 1em; 
+}
 #revision-list-widget h3 {
     color: #000;
     margin-bottom: 1em;
