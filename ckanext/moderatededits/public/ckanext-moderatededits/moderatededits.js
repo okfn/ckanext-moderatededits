@@ -327,21 +327,15 @@ CKANEXT.MODERATEDEDITS = {
         $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
             var fieldName = $(value).attr('name');
             var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
-            if(shadowValue != undefined){
-                CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
+
+            if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+               CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
+                if(shadowValue != undefined){
+                    CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
+                }
             }
         });
-        // TODO: Need to call different functions for different input types, like:
-        // if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
-        //    CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
-        //     CKANEXT.MODERATEDEDITS.standardFieldChanged(
-        //         field, fieldName, inputValue, shadowValue);
-        // }
-        // else if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
-        //    CKANEXT.MODERATEDEDITS.RESOURCES_FIELD){
-        //     CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(
-        //         field, fieldName);
-        // }
+        CKANEXT.MODERATEDEDITS.replaceAllResourcesWithShadows();
     },
 
     // replace field value with current shadow values
@@ -352,12 +346,36 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.checkField(field[0]);
     },
 
-    // replace a row in the resource table with its current shadow values
+    // replace a row in the resources table with its current shadow values
     replaceResourceWithShadow:function(rID){
         var shadowNumber = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
         CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__url');
         CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__format');
         CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__description');
+    },
+
+    // replace all rows in the resources table with its current shadow values
+    replaceAllResourcesWithShadows:function(){
+        // replace edited rows
+        // TODO: replace this when fieldsets have IDs
+        var legends = $('#package-edit legend');
+        var rows = [];
+        for(var i = 0; i < legends.length; i++){
+            if($(legends[i]).text() === "Resources"){
+                rows = $(legends[i]).closest("fieldset").find("table").first()
+                    .find("tbody").find("tr");
+            }
+        }
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("resources-shadow")){
+                console.log(rows[i]);
+                var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
+                CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
+            }
+        }
+
+        // remove added rows
+        // add deleted rows
     },
 
     // click handler for 'copy value to field' button in shadow area
