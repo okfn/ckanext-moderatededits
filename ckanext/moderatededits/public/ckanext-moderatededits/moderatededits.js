@@ -83,13 +83,6 @@ CKANEXT.MODERATEDEDITS = {
         // change default preview/submit buttons to match style
         $('.submit input[name="preview"]').button(); 
         $('.submit input[name="save"]').button(); 
-        // add new button for saving a moderated version
-        if(this.isModerator){
-            var saveModHtml = ' <input name="save-approved" type="submit" ' +
-                'value="Save And Approve" />';
-            $('.submit input[name="save"]').after(saveModHtml);
-            $('.submit input[name="save-approved"]').button();
-        }
         // disable moveup/movedown functionality on resources form for now
         $('a.moveUp').remove();
         $('a.moveDown').remove();
