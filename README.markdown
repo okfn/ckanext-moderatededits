@@ -26,10 +26,8 @@ and should be available.
 Todo / Roadmap
 --------------
 
-* Localise displayed dates.
 * Limit no. revisions shown in the revisions box, maybe show as separate pages with prev/next buttons.
 * Do some JS validation on 'edit summary' field (the revision commit message)
-* Add code to handle package resources 
 * Add code to handle package extras 
 
 Tests
