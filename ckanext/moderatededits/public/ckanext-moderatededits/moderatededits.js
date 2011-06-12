@@ -78,7 +78,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         // add click handler for 'click here for more information' link in info box
         $('a#revision-show-mod-info').click(ns.showModInfoClicked);
         // add click handler for 'select latest revision' link in info box
-        $('a#revision-select-latest').click(ns.latestApprovedClicked);
+        $('a#revision-select-latest').click(function(){
+            ns.changeRevision(ns.lastApproved);
+        });
         //add the input so backend knows this is a revision submit
         hidden_input = '<input name="moderated" value="True" type="hidden">';
         $('.submit input[name="preview"]').before(hidden_input); 
@@ -155,25 +157,17 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
     };
 
-    // change revision
-    ns.changeRevision = function(index){
-        ns.activeRevision = index;
-        ns.revisionInfo();
-        ns.revisionList();
-    };
-
+    // callback for 'click here to find out more' link for moderators
     ns.showModInfoClicked = function(){
         $('#revision-show-mod-info').fadeOut(ns.fadeTime);
         $('#revision-moderator-info').slideToggle();
     };
 
-    ns.latestApprovedClicked = function(){
-        ns.changeRevision(ns.lastApproved);
-    };
-
-    // callback handler for links in revision list (select revisions)
-    ns.revisionClicked = function(e){
-        ns.changeRevision($(e.target).attr('id').substr("revision-".length));
+    // change revision
+    ns.changeRevision = function(index){
+        ns.activeRevision = index;
+        ns.revisionInfo();
+        ns.revisionList();
     };
 
     // display the revision list
@@ -240,7 +234,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 }
                 $('#revision-list').empty().append(html);
                 // add a click handlers for revision list URLs
-                $('a.revision-list-button').click(ns.revisionClicked);
+                $('a.revision-list-button').click(function(ev){
+                    ns.changeRevision($(ev.target).attr('id').substr("revision-".length));
+                });
                 // add dialog for replace all confirmation box
                 $('#revision-replace-all-warning').dialog({
                     autoOpen: false,
