@@ -166,7 +166,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     // change revision
     ns.changeRevision = function(index){
         ns.activeRevision = index;
-        ns.revisionInfo();
         ns.revisionList();
     };
 
