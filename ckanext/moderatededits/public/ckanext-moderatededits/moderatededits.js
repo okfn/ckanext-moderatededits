@@ -115,12 +115,11 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.lastApprovedRevision = function(){
         var lastApproved = ns.activeRevision;
 
-        if(ns.revisions && 
-           ns.revisions.length > 0){
-            if(!ns.revisions[ns.activeRevision].current_approved){
+        if(ns.revisions && ns.revisions.length > 0){
+            if(!ns.revisions[ns.activeRevision].approved){
                 // get the latest approved revision
                 for(var i in ns.revisions){
-                    if(ns.revisions[i].current_approved){
+                    if(ns.revisions[i].approved){
                         lastApproved = i;
                     }
                 }
@@ -442,6 +441,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         // 
         // use the native setAttribute function here, as jQuery's .val() or
         // .attr('value') don't actually change the html for value attributes
+        //
+        // TODO: check for empty resource table
         clone.find(".resource-url").find("input")[0].setAttribute("value",
             ns.shadows["resources__"+n+"__url"]);
         clone.find(".resource-format").find("input")[0].setAttribute("value",
@@ -540,7 +541,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 shadow += shadowValue;
             }
             else if(field.nodeName.toLowerCase() === "textarea"){
-                var d = ns.dmp.diff_main(shadowValue, inputValue);
+                var d = ns.dmp.diff_main(inputValue, shadowValue);
                 ns.dmp.diff_cleanupSemantic(d);
                 shadow += ns.dmp.diff_prettyHtml(d);
             }
