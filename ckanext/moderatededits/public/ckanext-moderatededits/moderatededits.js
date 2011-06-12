@@ -32,6 +32,7 @@ CKANEXT.MODERATEDEDITS = {
         // resources start with 'resources__', extras with 'extras__', etc.
         this.formInputTypes = {}
         $.each(this.formInputs, function(index, value){
+            // TODO: replace this when fieldsets have IDs
             var legend = $(value).closest('fieldset').children('legend').text();
             if(legend === 'Resources'){
                 var inputType = CKANEXT.MODERATEDEDITS.RESOURCES_FIELD;
@@ -62,7 +63,6 @@ CKANEXT.MODERATEDEDITS = {
         // default active revision is the latest one
         this.activeRevision = 0;
         this.activeRevisionID = null;
-        this.activeRevisionMsg = null;
         this.revisions = null;
         this.lastApproved = 0;
         this.shadows = {};
@@ -196,7 +196,6 @@ CKANEXT.MODERATEDEDITS = {
                         html += 'id="revision-active" ';
                         // save the revision ID and log message
                         CKANEXT.MODERATEDEDITS.activeRevisionID = response[i].revision_id;
-                        CKANEXT.MODERATEDEDITS.activeRevisionMsg = response[i].message;
                     }
                     // set approved class
                     if(response[i].approved){
@@ -208,10 +207,19 @@ CKANEXT.MODERATEDEDITS = {
                     html += '>';
 
                     if(i == CKANEXT.MODERATEDEDITS.activeRevision){
+                        var commitMessage = response[i].message;
+                        if(commitMessage === ""){
+                            commitMessage = "There was no commit message for this revision";
+                        }
                         html += '<span id="revision-active-text">' + revisionDate +  
                                 '</span>' +
+                                '<div class="revision-list-buttons">' +
                                 '<button id="revision-replace-all"' + 
                                 ' title="Replace all fields with values from this revision"></button>' +
+                                '<button id="revision-toggle-info"' + 
+                                ' title="Display the commit message for this revision"></button>' +
+                                '</div>' +
+                                '<div id="revision-commit-message">' + commitMessage + '</div>' +
                                 '<div id="revision-replace-all-warning"' +
                                 ' title="Replace all fields with values from this revision?">' +
                                 'This action will replace any changes that you have made to ' +
@@ -251,6 +259,13 @@ CKANEXT.MODERATEDEDITS = {
                 $('#revision-replace-all').click(function(){
                     $('#revision-replace-all-warning').dialog('open');
                 });
+                // add button and click handler for info button
+                $('#revision-toggle-info').button({
+                    text: false, icons : {primary:'ui-icon-info'}
+                });
+                $('#revision-toggle-info').click(function(){
+                    $('#revision-commit-message').slideToggle();
+                });
             }
 
             // update the revision info box
@@ -277,10 +292,12 @@ CKANEXT.MODERATEDEDITS = {
         if($('.shadow-value').length){
             $('#revision-active').removeClass("revision-active-match");
             $('#revision-active').addClass("revision-active-nomatch");
+            $('#revision-list-new-revision').fadeIn(CKANEXT.MODERATEDEDITS.fadeTime);
         }
         else{
             $('#revision-active').removeClass("revision-active-nomatch");
             $('#revision-active').addClass("revision-active-match");
+            $('#revision-list-new-revision').fadeOut(CKANEXT.MODERATEDEDITS.fadeTime);
         }
     },
     
@@ -311,21 +328,15 @@ CKANEXT.MODERATEDEDITS = {
         $.each(CKANEXT.MODERATEDEDITS.formInputs, function(index, value){
             var fieldName = $(value).attr('name');
             var shadowValue = CKANEXT.MODERATEDEDITS.shadows[fieldName];
-            if(shadowValue != undefined){
-                CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
+
+            if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
+               CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
+                if(shadowValue != undefined){
+                    CKANEXT.MODERATEDEDITS.replaceWithShadow(fieldName);
+                }
             }
         });
-        // TODO: Need to call different functions for different input types, like:
-        // if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
-        //    CKANEXT.MODERATEDEDITS.STANDARD_FIELD){
-        //     CKANEXT.MODERATEDEDITS.standardFieldChanged(
-        //         field, fieldName, inputValue, shadowValue);
-        // }
-        // else if(CKANEXT.MODERATEDEDITS.formInputTypes[fieldName] ==
-        //    CKANEXT.MODERATEDEDITS.RESOURCES_FIELD){
-        //     CKANEXT.MODERATEDEDITS.resourcesMatchOrShadow(
-        //         field, fieldName);
-        // }
+        CKANEXT.MODERATEDEDITS.replaceAllResourcesWithShadows();
     },
 
     // replace field value with current shadow values
@@ -336,12 +347,57 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.checkField(field[0]);
     },
 
-    // replace a row in the resource table with its current shadow values
+    // replace a row in the resources table with its current shadow values
     replaceResourceWithShadow:function(rID){
         var shadowNumber = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
         CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__url');
         CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__format');
         CKANEXT.MODERATEDEDITS.replaceWithShadow('resources__' + shadowNumber + '__description');
+    },
+
+    // replace all rows in the resources table with its current shadow values
+    replaceAllResourcesWithShadows:function(){
+        // replace edited rows
+        // TODO: replace this when fieldsets have IDs
+        var legends = $('#package-edit legend');
+        var fieldset = undefined;
+        var rows = [];
+        for(var i = 0; i < legends.length; i++){
+            if($(legends[i]).text() === "Resources"){
+                fieldset = $(legends[i]).closest("fieldset");
+                break;
+            }
+        }
+        if(!fieldset){
+            // can't find resources fieldset
+            return;
+        }
+        rows = fieldset.find("table").first().find("tbody").find("tr");
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("resources-shadow")){
+                var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
+                CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
+            }
+        }
+
+        // remove added rows
+        rows = $('#resources-added').find("tr");
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("resources-shadow")){
+                $(rows[i]).remove();
+            }
+        }
+
+        // add deleted rows
+        rows = $('#resources-removed').find("tr");
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("resources-shadow")){
+                var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
+                CKANEXT.MODERATEDEDITS.resourcesReplaceRemoved(rID);
+            }
+        }
+        
+        CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
 
     // click handler for 'copy value to field' button in shadow area
@@ -356,14 +412,39 @@ CKANEXT.MODERATEDEDITS = {
         CKANEXT.MODERATEDEDITS.replaceResourceWithShadow(rID);
     },
 
-    resourcesReplaceRemovedClicked:function(e){
-        var rID = $(this).closest("tr").attr('id').substr("resources-shadow-".length);
-        var n = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[rID];
+    resourcesReplaceRemoved:function(id){
+        var n = CKANEXT.MODERATEDEDITS.shadowResourceNumbers[id];
 
-        var table = $(this).closest("fieldset").find("table").first();
+        // TODO: replace this when fieldsets have IDs
+        var legends = $('#package-edit legend');
+        var table = undefined;
+        for(var i = 0; i < legends.length; i++){
+            if($(legends[i]).text() === "Resources"){
+                table = $(legends[i]).closest("fieldset").find("table").first();
+                break;
+            }
+        }
+        if(!table){
+            // can't find resources table
+            return;
+        }
+
         var lastRow = table.find('tr:last');
         var clone = lastRow.clone(true);
-        clone.insertAfter(lastRow).find('input').val('');
+        clone.insertAfter(lastRow);
+
+        // set new row values to shadow values
+        // 
+        // use the native setAttribute function here, as jQuery's .val() or
+        // .attr('value') don't actually change the html for value attributes
+        clone.find(".resource-url").find("input")[0].setAttribute("value",
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__url"]);
+        clone.find(".resource-format").find("input")[0].setAttribute("value",
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__format"]);
+        clone.find(".resource-description").find("input")[0].setAttribute("value",
+            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__description"]);
+        clone.find(".resource-id").find("input")[0].setAttribute("value", id);
+
         CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
             clone, CKANEXT.MODERATEDEDITS.resourceGetRowNumber(lastRow) + 1);
         // set row numbers in all 'resources added' rows too
@@ -372,16 +453,11 @@ CKANEXT.MODERATEDEDITS = {
             CKANEXT.MODERATEDEDITS.resourceSetRowNumber(
                 addedRows[i], CKANEXT.MODERATEDEDITS.resourceGetRowNumber(addedRows[i]) + 1);
         }
+    },
 
-        // set new row values to shadow values
-        clone.find(".resource-url").find("input").val(
-            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__url"]);
-        clone.find(".resource-format").find("input").val(
-            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__format"]);
-        clone.find(".resource-description").find("input").val(
-            CKANEXT.MODERATEDEDITS.shadows["resources__"+n+"__description"]);
-        clone.find(".resource-id").find("input").val(rID);
-
+    resourcesReplaceRemovedClicked:function(e){
+        var rID = $(this).closest("tr").attr('id').substr("resources-shadow-".length);
+        CKANEXT.MODERATEDEDITS.resourcesReplaceRemoved(rID);
         CKANEXT.MODERATEDEDITS.resourcesAddedOrRemoved();
     },
 
@@ -405,13 +481,11 @@ CKANEXT.MODERATEDEDITS = {
         if(confirm('Are you sure you wish to remove this row?')){
             var row = $(this).parents('tr');
             var following = row.nextAll();
-
             row.remove();
             following.each(function(){
-                CKANEXT.MODERATEDEDITS.setRowNumber(this, 
-                    CKANEXT.MODERATEDEDITS.getRowNumber(this) - 1);
+                CKANEXT.MODERATEDEDITS.resourceSetRowNumber(this, 
+                    CKANEXT.MODERATEDEDITS.resourceGetRowNumber(this) - 1);
             });
-
             // remove any shadow for this row
             var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
             $('#resources-shadow-' + rID).remove();
@@ -554,6 +628,8 @@ CKANEXT.MODERATEDEDITS = {
                 });
             }
         }
+
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // checks for differences between the current list of resources and 
@@ -588,7 +664,6 @@ CKANEXT.MODERATEDEDITS = {
                         resourceNumbers[i] + '__url"]').closest("tr");
 
             if(CKANEXT.MODERATEDEDITS.shadowResourceNumbers[i] === undefined){
-                // add a shadow for this resource if one doesn't exist already
                 row.find("td").removeClass("revision-match-resources");
                 row.find("td").addClass("shadow-value");
                 row.find("td").addClass("resources-shadow-added");
@@ -670,6 +745,9 @@ CKANEXT.MODERATEDEDITS = {
         $('button.resources-shadow-replace-removed').button({
             icons : {primary:'ui-icon-arrowthick-1-n'}
         });
+
+
+        CKANEXT.MODERATEDEDITS.checkAllMatch();
     },
 
     // input value changed, update match/shadow status
