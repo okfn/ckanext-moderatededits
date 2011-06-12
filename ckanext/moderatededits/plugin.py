@@ -89,6 +89,6 @@ class ModeratedEditsPlugin(SingletonPlugin):
             stream = stream | Transformer('body//div[@class="package"]/h2[1]')\
                 .after(HTML(html.REVISION_INFO_CODE))
             # add revision list widget
-            stream = stream | Transformer('body//div[@id="primary"]')\
+            stream = stream | Transformer('body//div[@id="primary"]/ul')\
                 .append(HTML(html.REVISION_LIST_CODE))
         return stream

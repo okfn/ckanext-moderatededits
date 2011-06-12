@@ -12,6 +12,7 @@
 #revision-info { 
     padding: 0; 
     display: none; 
+    margin-top: 30px;
 }
 #revision-info h3 {
     border-bottom: 1px solid #e7e7e7;
@@ -33,14 +34,32 @@
 }
 
 /* Revisions list */
-#revision-list-widget div { margin-top: 1em; }
+#main .widget-area ul ul { margin: 0; }
+#revision-list-widget {
+    margin-top: 58px;
+    width: 198px;
+}
+#revision-list-widget div {
+    margin-top: 1em; 
+}
+#revision-list-widget ul {
+    list-style-type: none; 
+    text-indent: 0;
+    margin: 0;
+}
 #revision-list-widget h3 {
     color: #000;
     margin-bottom: 1em;
 }
+#revision-list li { width: 175px; }
 #revision-list { margin: 0; }
-#revision-replace-all { padding: 4px; margin-left: 2em; vertical-align: middle; }
+#revision-list button { 
+    margin: 0 1em 0 0; 
+    vertical-align: middle; 
+}
+.revision-list-buttons { padding-left: 5px; }
 #revision-replace-all-warning { display: none; }
+#revision-commit-message { display: none; }
 li.revision-approved:before {
     content: "* ";
     color: #b00;
@@ -49,6 +68,15 @@ li.revision-approved:before {
 .revision-active-nomatch { border: 1px solid #f8dc30; }
 li.revision-approved { padding: 10px 15px 10px 5px; }
 li.revision-not-approved { padding: 10px 15px 10px 15px; }
+.revision-approved-marker { color: #b00; }
+#revision-list-new-revision {
+    display: none;
+}
+#revision-list-new-revision li {
+    padding: 10px 15px 10px 15px; 
+    border: 1px solid #e7e7e7; 
+    margin-bottom: 1em;
+}
 .revision-approved-marker { color: #b00; }
 
 /* Edit form */

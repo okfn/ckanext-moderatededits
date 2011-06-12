@@ -49,6 +49,9 @@ REVISION_INFO_CODE = """
 REVISION_LIST_CODE = """
 <div id="revision-list-widget" class="revision-box">
     <h3>Revisions</h3>
+    <ul id="revision-list-new-revision">
+        <li>New Revision (Not Saved)</li>
+    </ul>
     <ul id="revision-list">
     </ul>
     <div id="revision-list-msg">
