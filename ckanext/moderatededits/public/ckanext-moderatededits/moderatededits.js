@@ -463,8 +463,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     };
 
     ns.resourceGetRowNumber = function(tr){
-        var rowNumber = $(tr).find('input').attr('name').match(
-            ns.fieldNameRegex)[2];
+        var rowNumber = $(tr).find('input').attr('name').match(ns.fieldNameRegex)[2];
         return parseInt(rowNumber, 10);
     };
 
@@ -484,8 +483,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             var following = row.nextAll();
             row.remove();
             following.each(function(){
-                ns.resourceSetRowNumber(this, 
-                    ns.resourceGetRowNumber(this) - 1);
+                ns.resourceSetRowNumber(this, ns.resourceGetRowNumber(this) - 1);
             });
             // remove any shadow for this row
             var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
@@ -678,6 +676,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     row.find("td").addClass("revision-match-resources");
                     row.find("td").removeClass("shadow-value");
                     row.find("td").removeClass("resources-shadow-added");
+                    // FIXME: the html() method does not get the current value if it has
+                    // been changed
                     $("#resources-added").prev("table").find("tbody").append(
                         '<tr>' + row.html() + '</tr>');
                     row.remove();
@@ -762,13 +762,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             return;
         }
 
-        if(ns.formInputTypes[fieldName] ==
-           ns.STANDARD_FIELD){
-            ns.standardFieldChanged(
-                field, fieldName, inputValue, shadowValue);
+        if(ns.formInputTypes[fieldName] == ns.STANDARD_FIELD){
+            ns.standardFieldChanged(field, fieldName, inputValue, shadowValue);
         }
-        else if(ns.formInputTypes[fieldName] ==
-           ns.RESOURCES_FIELD){
+        else if(ns.formInputTypes[fieldName] == ns.RESOURCES_FIELD){
             ns.resourcesFieldChanged(field, fieldName);
         }
 
