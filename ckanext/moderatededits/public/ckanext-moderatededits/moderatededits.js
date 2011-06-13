@@ -270,6 +270,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             ns.revisionInfo();
             // update the shadow field values
             ns.updateShadows();
+            // update extras
+            ns.updateExtras();
         };
 
         var error = function(response){
