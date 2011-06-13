@@ -583,6 +583,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
                          'Copy value to field</button>'
             if($.trim(shadowValue) === ""){
+                $(field).next("div").find(".shadow-value").append("[Empty]");
                 button = button.replace('Copy value to field', 'Clear this field');
             }
             $(field).next("div").append(button); 
