@@ -302,7 +302,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
             else{
                 var inputType = ns.STANDARD_FIELD;
-                $(ns.formInputs[index]).after('<div class="shadow"></div>');
+                if(!$(ns.formInputs[index]).next().hasClass("shadow")){
+                    $(ns.formInputs[index]).after('<div class="shadow"></div>');
+                }
             }
             ns.formInputTypes[$(value).attr('name')] = inputType;
         });
@@ -316,7 +318,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.updateShadows = function(){
         var success = function(data){
             ns.shadows = data;
-            console.log(data);
             ns.shadowResourceNumbers = {};
             ns.shadowExtras = {};
             for(var i in data){
