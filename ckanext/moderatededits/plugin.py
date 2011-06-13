@@ -54,6 +54,8 @@ class ModeratedEditsPlugin(SingletonPlugin):
             config['extra_template_paths'] += ',' + template_dir
         else:
             config['extra_template_paths'] = template_dir
+        # register that this plugin enforces moderation
+        config['moderated'] = "true"
 
     def configure(self, config):
         """
