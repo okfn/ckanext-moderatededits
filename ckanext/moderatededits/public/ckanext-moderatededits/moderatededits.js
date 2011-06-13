@@ -15,6 +15,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.EXTRAS_FIELD = 2;
         ns.REVISION_LIST_MAX_LENGTH = 10;
 
+        // values received from plugin
         ns.packageName = packageName;
         ns.revisionListURL = revisionListURL;
         ns.revisionDataURL = revisionDataURL;
@@ -24,32 +25,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.isModerator = $('#state').length > 0;
         // enable the sidebar which is where the revision list goes by default
         $('body').removeClass("hide-sidebar");
-        ns.formInputs = $('#package-edit input[type=text], select[id!="state"], textarea');
-        // for each form input, decide whether it should have the standard
-        // shadow, or if it belongs to a special case (resources, extras, etc)
-        //
-        // here we do this by checking which fieldset the form item is in
-        //
-        // another option would be to check the name of the item, as currently
-        // resources start with 'resources__', extras with 'extras__', etc.
-        ns.formInputTypes = {};
-        ns.extrasFormInputs = [];
-        $.each(ns.formInputs, function(index, value){
-            // TODO: replace this when fieldsets have IDs
-            var legend = $(value).closest('fieldset').children('legend').text();
-            if(legend === 'Resources'){
-                var inputType = ns.RESOURCES_FIELD;
-            }
-            else if(legend === 'Extras'){
-                var inputType = ns.EXTRAS_FIELD;
-                ns.extrasFormInputs.push(ns.formInputs[index]);
-            }
-            else{
-                var inputType = ns.STANDARD_FIELD;
-                $(ns.formInputs[index]).after('<div class="shadow"></div>');
-            }
-            ns.formInputTypes[$(value).attr('name')] = inputType;
-        });
         // Add the 'resources added' and 'resources removed' sections
         var resourcesAdded = '<div id="resources-added">' +
             '<h3>Resources Added</h3>' +
@@ -67,6 +42,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.activeRevisionID = null;
         ns.revisions = null;
         ns.lastApproved = 0;
+        ns.formInputs = {}
+        ns.formInputTypes = {};
+        ns.extrasFormInputs = [];
         ns.shadows = {};
         ns.shadowResourceNumbers = {};
         ns.shadowExtras = {};
@@ -97,9 +75,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         // fix width of log message
         $('#log_message').removeClass("short");
 
-        // callback handler for form fields being changed
-        ns.formInputs.change(ns.inputValueChanged);
-        ns.formInputs.keyup(ns.inputValueChanged);
         // set speed for JQuery fades (in milliseconds)
         ns.fadeTime = 500;
         // add a diff-match-patch object to get a diff of textareas
@@ -268,6 +243,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             // update the revision info box
             ns.revisions = response;
             ns.revisionInfo();
+            // update the lists of form input fields
+            ns.updateFormInputs();
             // update the shadow field values
             ns.updateShadows();
             // update extras
@@ -298,6 +275,39 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             $('#revision-active').addClass("revision-active-match");
             $('#revision-list-new-revision').fadeOut(ns.fadeTime);
         }
+    };
+
+    ns.updateFormInputs = function(){
+        ns.formInputs = $('#package-edit input[type=text], select[id!="state"], textarea');
+        // for each form input, decide whether it should have the standard
+        // shadow, or if it belongs to a special case (resources, extras, etc)
+        //
+        // here we do this by checking which fieldset the form item is in
+        //
+        // another option would be to check the name of the item, as currently
+        // resources start with 'resources__', extras with 'extras__', etc.
+        ns.formInputTypes = {};
+        ns.extrasFormInputs = [];
+        $.each(ns.formInputs, function(index, value){
+            // TODO: replace this when fieldsets have IDs
+            var legend = $(value).closest('fieldset').children('legend').text();
+            if(legend === 'Resources'){
+                var inputType = ns.RESOURCES_FIELD;
+            }
+            else if(legend === 'Extras'){
+                var inputType = ns.EXTRAS_FIELD;
+                ns.extrasFormInputs.push(ns.formInputs[index]);
+            }
+            else{
+                var inputType = ns.STANDARD_FIELD;
+                $(ns.formInputs[index]).after('<div class="shadow"></div>');
+            }
+            ns.formInputTypes[$(value).attr('name')] = inputType;
+        });
+        // callback handler for form fields being changed
+        ns.formInputs.unbind();
+        ns.formInputs.change(ns.inputValueChanged);
+        ns.formInputs.keyup(ns.inputValueChanged);
     };
     
     // update the values of the shadow fields to those of the active revision

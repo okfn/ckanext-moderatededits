@@ -51,14 +51,14 @@
     color: #000;
     margin-bottom: 1em;
 }
-#revision-list li { width: 175px; }
+#revision-list li { width: 165px; }
 #revision-list { margin: 0; }
 #revision-list button { 
     margin: 0 1em 0 0; 
     padding: 5px 25px 5px 5px;
     vertical-align: middle; 
 }
-.revision-list-buttons { padding-left: 5px; }
+.revision-approved .revision-list-buttons { padding-left: 10px; }
 #revision-replace-all-warning { display: none; }
 #revision-commit-message { display: none; }
 li.revision-approved:before {
@@ -67,7 +67,7 @@ li.revision-approved:before {
 }
 .revision-active-match { border: 1px solid #04ae0d; }
 .revision-active-nomatch { border: 1px solid #f8dc30; }
-li.revision-approved { padding: 10px 15px 10px 5px; }
+li.revision-approved { padding: 10px 25px 10px 5px; }
 li.revision-not-approved { padding: 10px 15px 10px 15px; }
 .revision-approved-marker { color: #b00; }
 #revision-list-new-revision {
