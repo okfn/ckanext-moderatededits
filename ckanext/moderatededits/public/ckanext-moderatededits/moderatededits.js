@@ -716,10 +716,11 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     row.find("td").addClass("revision-match-resources");
                     row.find("td").removeClass("shadow-value");
                     row.find("td").removeClass("resources-shadow-added");
-                    // FIXME: the html() method does not get the current value if it has
-                    // been changed
-                    $("#resources-added").prev("table").find("tbody").append(
-                        '<tr>' + row.html() + '</tr>');
+                    var url = $('.resource-url', row).find('input').val();
+                    var format = $('.resource-format', row).find('input').val();
+                    var desc = $('.resource-description', row).find('input').val();
+                    var id = $('.resource-id', row).find('input').val();
+                    ns.resourcesAddRow(url, format, desc, id);
                     row.remove();
                 }
             }
