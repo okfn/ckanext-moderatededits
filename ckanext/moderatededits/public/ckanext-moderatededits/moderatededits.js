@@ -390,6 +390,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
         });
         ns.replaceAllResourcesWithShadows();
+        ns.extrasAllResourcesWithShadows();
     };
 
     // callback for key pressed in an edit box (input, textarea)
@@ -498,7 +499,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     // replace all rows in the resources table with its current shadow values
     ns.replaceAllResourcesWithShadows = function(){
-        // replace edited rows
         // TODO: replace this when fieldsets have IDs
         var legends = $('#package-edit legend');
         var fieldset = undefined;
@@ -513,6 +513,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             // can't find resources fieldset
             return;
         }
+
+        // replace edited rows
         rows = fieldset.find("table").first().find("tbody").find("tr");
         for(var i = 0; i < rows.length; i++){
             if($(rows[i]).hasClass("resources-shadow")){
@@ -872,6 +874,51 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
     };
 
+    ns.extrasAllResourcesWithShadows = function(){
+        // TODO: replace this when fieldsets have IDs
+        var legends = $('#package-edit legend');
+        var fieldset = undefined;
+        var rows = [];
+        for(var i = 0; i < legends.length; i++){
+            if($(legends[i]).text() === "Extras"){
+                fieldset = $(legends[i]).closest("fieldset");
+                break;
+            }
+        }
+        if(!fieldset){
+            return;
+        }
+
+        // replace edited extras
+        extras = fieldset.find(".extras-dd");
+        for(var i = 0; i < extras.length; i++){
+            var shadowDiv = $(extras[i]).find("div.shadow-value");
+            if(shadowDiv.length){
+                var key = $(extras[i]).find("input").first().val();
+                ns.extrasReplaceWithShadow(key);
+            }
+        }
+
+        // remove extras rows
+        // rows = $('#resources-added').find("tr");
+        // for(var i = 0; i < rows.length; i++){
+        //     if($(rows[i]).hasClass("resources-shadow")){
+        //         $(rows[i]).remove();
+        //     }
+        // }
+
+        // add deleted extras
+        // rows = $('#resources-removed').find("tr");
+        // for(var i = 0; i < rows.length; i++){
+        //     if($(rows[i]).hasClass("resources-shadow")){
+        //         var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
+        //         ns.resourcesReplaceRemoved(rID);
+        //     }
+        // }
+        
+        ns.extrasAddedOrRemoved();
+    };
+
     // replace extras field with shadow
     ns.extrasReplaceWithShadow = function(key){
         var shadowValue = ns.shadowExtras[key];
@@ -899,6 +946,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             $(field).addClass("revision-match");
             $(field).parent().next("div").fadeOut(ns.fadeTime, function(){
                 $(field).parent().next("div").empty();
+                ns.checkAllMatch();
             });
         }
         else{
@@ -937,6 +985,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     // only displays shadows for added/removed rows, edit rows are handled by the
     // extrasFieldChanged function
     ns.extrasAddedOrRemoved = function(){
+        ns.checkAllMatch();
     };
 
 })(CKANEXT.MODERATEDEDITS, jQuery);
