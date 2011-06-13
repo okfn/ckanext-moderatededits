@@ -11,7 +11,7 @@ Installation and Activation
 
 To install the plugin, enter your virtualenv and install the source:
 
-    $ pip install hg+http://bitbucket.org/johnglover/ckanext-moderatededits
+    $ pip install hg+http://bitbucket.org/okfn/ckanext-moderatededits
 
 This will also register a plugin entry point, so you now should be 
 able to add the following to your CKAN .ini file:
@@ -35,8 +35,3 @@ Tests
 From the ckanext-moderatededits directory, run:
 
     $ nosetests --ckan
-
-Feedback
---------
-Send any comments, queries, suggestions or bug reports to:
-j @ johnglover dot net.
