@@ -411,7 +411,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.replaceResourceWithShadow(rID);
     };
 
-    ns.resourcesAddRow = function(row){
+    // add a new row to the resources table
+    ns.resourcesAddRow = function(url, format, description, id){
         // TODO: replace this when fieldsets have IDs
         var legends = $('#package-edit legend');
         var table = undefined;
@@ -426,34 +427,19 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             return;
         }
 
-        var lastRow = table.find('tbody').find('tr:last');
-        if(lastRow.length){
-            var addedRow = $(row).insertAfter(lastRow);
-            ns.resourceSetRowNumber(addedRow, ns.resourceGetRowNumber(lastRow) + 1);
-        }
-        else{
-            var addedRow = table.find('tbody').append(row);
-            ns.resourceSetRowNumber(addedRow, 0);
-        }
-
-        var field = table.find('tr:last').find('.resource-url').find('input');
-        ns.resourcesFieldChanged(field[0], field.attr('name'));
-    };
-
-    ns.resourcesReplaceRemoved = function(id){
-        var n = ns.shadowResourceNumbers[id];
+        // create the new row
         var row = '<tr>' +
             '<td class="resource-url">' +
             '<input name="resources__0__url" type="text" class="short" ' +
-            'value="' + ns.shadows["resources__"+n+"__url"] + '" />' +
+            'value="' + url + '" />' +
             '</td>' +
             '<td class="resource-format">' +
             '<input name="resources__0__format" type="text" class="short" ' +
-            'value="' + ns.shadows["resources__"+n+"__format"] + '" />' +
+            'value="' + format + '" />' +
             '</td>' +
             '<td class="resource-description">' +
             '<input name="resources__0__description" type="text" class="medium-width" ' +
-            'value="' + ns.shadows["resources__"+n+"__description"] + '" />' +
+            'value="' + description + '" />' +
             '</td>' +
             '<td class="resource-hash">' +
             '<input name="resources__0__hash" type="text" class="medium-width" ' +
@@ -470,7 +456,28 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             '</div>' +
             '</td>' +
             '</tr>';
-        ns.resourcesAddRow(row);
+
+        // add the new row to the resources table
+        var lastRow = table.find('tbody').find('tr:last');
+        if(lastRow.length){
+            var addedRow = $(row).insertAfter(lastRow);
+            ns.resourceSetRowNumber(addedRow, ns.resourceGetRowNumber(lastRow) + 1);
+        }
+        else{
+            var addedRow = table.find('tbody').append(row);
+            ns.resourceSetRowNumber(addedRow, 0);
+        }
+
+        var field = table.find('tr:last').find('.resource-url').find('input');
+        ns.resourcesFieldChanged(field[0], field.attr('name'));
+    };
+
+    ns.resourcesReplaceRemoved = function(id){
+        var n = ns.shadowResourceNumbers[id];
+        ns.resourcesAddRow(ns.shadows["resources__"+n+"__url"],
+                           ns.shadows["resources__"+n+"__format"], 
+                           ns.shadows["resources__"+n+"__description"],
+                           id);
         // set row numbers in all 'resources added' rows too
         var addedRows = $("#resources-added").find("tr");
         for(var i = 0; i < addedRows.length; i++){
