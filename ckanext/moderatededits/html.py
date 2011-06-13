@@ -6,12 +6,10 @@ HEAD_CODE = """
 """
 
 BODY_CODE = """
-<script type="text/javascript" src="/ckanext-moderatededits/jquery-1.5.2.min.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/jquery-ui-1.8.13.custom.min.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/diff_match_patch.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/moderatededits.js"></script>
 <script type="text/javascript">
-    jQuery.noConflict();
     jQuery('document').ready(function($){
         CKANEXT.MODERATEDEDITS.init('%(package_name)s', '%(revision_list_url)s', '%(revision_data_url)s');
     });

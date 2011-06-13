@@ -411,9 +411,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.replaceResourceWithShadow(rID);
     };
 
-    ns.resourcesReplaceRemoved = function(id){
-        var n = ns.shadowResourceNumbers[id];
-
+    ns.resourcesAddRow = function(row){
         // TODO: replace this when fieldsets have IDs
         var legends = $('#package-edit legend');
         var table = undefined;
@@ -428,26 +426,51 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             return;
         }
 
-        var lastRow = table.find('tr:last');
-        var clone = lastRow.clone(true);
-        clone.insertAfter(lastRow);
+        var lastRow = table.find('tbody').find('tr:last');
+        if(lastRow.length){
+            var addedRow = $(row).insertAfter(lastRow);
+            ns.resourceSetRowNumber(addedRow, ns.resourceGetRowNumber(lastRow) + 1);
+        }
+        else{
+            var addedRow = table.find('tbody').append(row);
+            ns.resourceSetRowNumber(addedRow, 0);
+        }
 
-        // set new row values to shadow values
-        // 
-        // use the native setAttribute function here, as jQuery's .val() or
-        // .attr('value') don't actually change the html for value attributes
-        //
-        // TODO: check for empty resource table
-        clone.find(".resource-url").find("input")[0].setAttribute("value",
-            ns.shadows["resources__"+n+"__url"]);
-        clone.find(".resource-format").find("input")[0].setAttribute("value",
-            ns.shadows["resources__"+n+"__format"]);
-        clone.find(".resource-description").find("input")[0].setAttribute("value",
-            ns.shadows["resources__"+n+"__description"]);
-        clone.find(".resource-id").find("input")[0].setAttribute("value", id);
+        var field = table.find('tr:last').find('.resource-url').find('input');
+        ns.resourcesFieldChanged(field[0], field.attr('name'));
+    };
 
-        ns.resourceSetRowNumber(
-            clone, ns.resourceGetRowNumber(lastRow) + 1);
+    ns.resourcesReplaceRemoved = function(id){
+        var n = ns.shadowResourceNumbers[id];
+        var row = '<tr>' +
+            '<td class="resource-url">' +
+            '<input name="resources__0__url" type="text" class="short" ' +
+            'value="' + ns.shadows["resources__"+n+"__url"] + '" />' +
+            '</td>' +
+            '<td class="resource-format">' +
+            '<input name="resources__0__format" type="text" class="short" ' +
+            'value="' + ns.shadows["resources__"+n+"__format"] + '" />' +
+            '</td>' +
+            '<td class="resource-description">' +
+            '<input name="resources__0__description" type="text" class="medium-width" ' +
+            'value="' + ns.shadows["resources__"+n+"__description"] + '" />' +
+            '</td>' +
+            '<td class="resource-hash">' +
+            '<input name="resources__0__hash" type="text" class="medium-width" ' +
+            '" />' +
+            '</td>' +
+            '<td class="resource-id">' +
+            '<input name="resources__0__id" type="hidden" ' +
+            'value="' + id + '" />' +
+            '</td>' +
+            '<td>' +
+            '<div class="controls">' +
+            '<a class="remove" title="Remove this row" href="#remove">' +
+            'Remove Row</a>' +
+            '</div>' +
+            '</td>' +
+            '</tr>';
+        ns.resourcesAddRow(row);
         // set row numbers in all 'resources added' rows too
         var addedRows = $("#resources-added").find("tr");
         for(var i = 0; i < addedRows.length; i++){
