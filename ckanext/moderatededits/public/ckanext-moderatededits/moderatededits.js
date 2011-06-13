@@ -25,7 +25,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.isModerator = $('#state').length > 0;
         // enable the sidebar which is where the revision list goes by default
         $('body').removeClass("hide-sidebar");
-        ns.formInputs = $('#package-edit input[type=text], select, textarea');
+        ns.formInputs = $('#package-edit input[type=text], select[id!="state"], textarea');
         // for each form input, decide whether it should have the standard
         // shadow, or if it belongs to a special case (resources, extras, etc)
         //
@@ -48,7 +48,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
             else{
                 var inputType = ns.STANDARD_FIELD;
-                // add empty shadow divs that will be filled later if necessary
                 $(ns.formInputs[index]).after('<div class="shadow"></div>');
             }
             ns.formInputTypes[$(value).attr('name')] = inputType;
