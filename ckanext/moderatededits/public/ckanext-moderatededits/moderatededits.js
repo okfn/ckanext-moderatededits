@@ -58,6 +58,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             ns.changeRevision(ns.lastApproved);
         });
         //add the input so backend knows this is a revision submit
+        // TODO: remove this when revision system has been updated to check
+        // the config variable set in plugin.py
         hidden_input = '<input name="moderated" value="True" type="hidden">';
         $('.submit input[name="preview"]').before(hidden_input); 
         // add new button for saving a moderated version
@@ -863,16 +865,69 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         for(var i = 0; i < ns.extrasFormInputs.length; i++){
             if($(ns.extrasFormInputs[i]).next().attr("type") === "checkbox"){
                 $(ns.extrasFormInputs[i]).after('<div class="shadow"></div>');
-                $(ns.extrasFormInputs[i]).wrap('<div class="extras-delete" />');
+                $(ns.extrasFormInputs[i]).wrap('<div class="extras-value" />');
                 // TODO: shouldn't need this class when fieldsets have IDs
                 $(ns.extrasFormInputs[i]).closest('dd').addClass("extras-dd");
             }
         }
     };
 
+    // replace extras field with shadow
+    ns.extrasReplaceWithShadow = function(key){
+        var shadowValue = ns.shadowExtras[key];
+        // TODO: limit this to extras when fieldsets have IDs
+        var keyField = $('#package-edit input[value="' + key + '"]');
+        var n = keyField.attr('name').charAt("extras__".length);
+        var field = $('#package-edit input[name="extras__' + n + '__value"]');
+        field.val(shadowValue);
+        ns.checkField(field[0]);
+    };
+
     // Called when a field in the extras area is edited
     // Check match/shadow status
     ns.extrasFieldChanged = function(field, fieldName){
+        // if this isn't a saved value, ignore
+        if(!$(field).parent().hasClass("extras-value")){
+            return;
+        }
+        var inputValue = $(field).val();
+        var key = $(field).parent().prev().val();
+        var shadowValue = ns.shadowExtras[key];
+
+        if(inputValue === shadowValue){
+            // fields match, so just set css style
+            $(field).addClass("revision-match");
+            $(field).parent().next("div").fadeOut(ns.fadeTime, function(){
+                $(field).parent().next("div").empty();
+            });
+        }
+        else{
+            // fields don't match - display shadow
+            $(field).removeClass("revision-match");
+            var shadowDiv = $(field).parent().next("div").empty();
+            var shadow = '<div class="shadow-value">' + shadowValue + '</div>';
+            shadowDiv.append(shadow);
+            // add the 'copy to field' button
+            //
+            // if the revision value was an empty string, display a different message
+            // on the button
+            var button = '<button type="button" id="extras-shadow-replace-' + key + '">' +
+                         'Copy value to field</button>'
+            if($.trim(shadowValue) === ""){
+                shadowDiv.find(".shadow-value").append("[Empty]");
+                button = button.replace('Copy value to field', 'Clear this field');
+            }
+            shadowDiv.append(button); 
+            $('#extras-shadow-replace-' + key).click(function(){
+                var key = $(this).attr('id').substr("extras-shadow-replace-".length);
+                ns.extrasReplaceWithShadow(key);
+            });
+            $('#extras-shadow-replace-' + key).button({
+                icons : {primary:'ui-icon-arrowthick-1-n'}
+            });
+            shadowDiv.fadeIn(ns.fadeTime);
+        }
+
         ns.checkAllMatch();
     };
 
