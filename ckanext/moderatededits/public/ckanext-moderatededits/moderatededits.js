@@ -666,8 +666,18 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 row.find("td").removeClass("revision-match-resources");
                 row.find("td").addClass("shadow-value");
                 row.find("td").addClass("resources-shadow-added");
-                resourcesAdded += '<tr class="resources-shadow">' + 
-                    row.html() + '</tr>';
+                // update input values html to match current values
+                var url = $('.resource-url', row).find('input').val();
+                var format = $('.resource-format', row).find('input').val();
+                var desc = $('.resource-description', row).find('input').val();
+                row.find(".resource-url").find("input")[0].setAttribute("value", url);
+                row.find(".resource-format").find("input")[0].setAttribute("value", format);
+                row.find(".resource-description").find("input")[0].setAttribute("value", desc);
+                resourcesAdded += '<tr class="resources-shadow">' + row.html() + '</tr>';
+                // remove any shadow for this row
+                if(row.next("tr").hasClass("resources-shadow")){
+                    row.next("tr").remove();
+                }
                 row.remove();
             }
             else{
@@ -703,7 +713,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         for(var i in ns.shadowResourceNumbers){
             if(resourceNumbers[i] === undefined){
                 var n = ns.shadowResourceNumbers[i];
-
                 resourcesRemoved += '<tr class="resources-shadow" ' +
                     'id="resources-shadow-' + i + '">' +
                     '<td class="shadow-value resources-url">' +
@@ -739,14 +748,13 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         // add click handlers for 'remove row' buttons
         $('a.remove').unbind('click');
         $('a.remove').click(ns.removeResourceClicked);
-        // add click handlers for 'Add bac' buttons
+        // add click handlers for 'Add back' buttons
         $('button.resources-shadow-replace-removed').unbind('click');
         $('button.resources-shadow-replace-removed').click(
             ns.resourcesReplaceRemovedClicked);
         $('button.resources-shadow-replace-removed').button({
             icons : {primary:'ui-icon-arrowthick-1-n'}
         });
-
 
         ns.checkAllMatch();
     };
