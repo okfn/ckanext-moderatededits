@@ -13,7 +13,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.STANDARD_FIELD = 0;
         ns.RESOURCES_FIELD = 1;
         ns.EXTRAS_FIELD = 2;
-        ns.GROUPS_FIELD =  3;
         ns.REVISION_LIST_MAX_LENGTH = 10;
 
         ns.packageName = packageName;
@@ -33,7 +32,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         //
         // another option would be to check the name of the item, as currently
         // resources start with 'resources__', extras with 'extras__', etc.
-        ns.formInputTypes = {}
+        ns.formInputTypes = {};
+        ns.extrasFormInputs = [];
         $.each(ns.formInputs, function(index, value){
             // TODO: replace this when fieldsets have IDs
             var legend = $(value).closest('fieldset').children('legend').text();
@@ -42,9 +42,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
             else if(legend === 'Extras'){
                 var inputType = ns.EXTRAS_FIELD;
-            }
-            else if(legend === 'Groups'){
-                var inputType = ns.GROUPS_FIELD;
+                ns.extrasFormInputs.push(ns.formInputs[index]);
             }
             else{
                 var inputType = ns.STANDARD_FIELD;
@@ -71,6 +69,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.lastApproved = 0;
         ns.shadows = {};
         ns.shadowResourceNumbers = {};
+        ns.shadowExtras = {};
 
         // display revision info box and list
         ns.revisionList();
@@ -303,12 +302,20 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.updateShadows = function(){
         var success = function(data){
             ns.shadows = data;
-            // save resource number based on ID
+            console.log(data);
             ns.shadowResourceNumbers = {};
+            ns.shadowExtras = {};
             for(var i in data){
-                if((i.substr(0, 11) === 'resources__') &&
-                   (i.substr(12) === '__id')){
-                    ns.shadowResourceNumbers[data[i]] = i.charAt(11);
+                // save resource number based on ID
+                if((i.substr(0, "resources__".length) === "resources__") &&
+                   (i.substr("resources__".length + 1) === "__id")){
+                    ns.shadowResourceNumbers[data[i]] = i.charAt("resources__".length);
+                }
+                // save extras values by key name
+                else if((i.substr(0, "extras__".length) === "extras__") &&
+                        (i.substr("extras__".length + 1) === '__key')){
+                    ns.shadowExtras[data[i]] = 
+                        data["extras__" + i.charAt("extras__".length) + "__value"]; 
                 }
             }
             ns.allMatchesAndShadows();
@@ -319,6 +326,40 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 dataType: 'json',
                 success: success
         }); 
+    };
+
+    // input value changed, update match/shadow status
+    ns.checkField = function(field){
+        var fieldName = $(field).attr("name");
+        var inputValue = $(field).val();
+        var shadowValue = ns.shadows[fieldName];
+
+        // ignore - empty fields to enter resources or extra keys/values
+        if(typeof shadowValue === "undefined"){
+            return;
+        }
+
+        if(ns.formInputTypes[fieldName] == ns.STANDARD_FIELD){
+            ns.standardFieldChanged(field, fieldName, inputValue, shadowValue);
+        }
+        else if(ns.formInputTypes[fieldName] == ns.RESOURCES_FIELD){
+            ns.resourcesFieldChanged(field, fieldName);
+        }
+        else if(ns.formInputTypes[fieldName] == ns.EXTRAS_FIELD){
+            ns.extrasFieldChanged(field, fieldName);
+        }
+
+        ns.checkAllMatch();
+    };
+
+    // show either shadows or matches for all fields
+    ns.allMatchesAndShadows = function(){
+        $.each(ns.formInputs, function(index, value){
+            ns.checkField(value);
+        });
+        ns.resourcesAddedOrRemoved();
+        ns.extrasAddedOrRemoved();
+        ns.checkAllMatch();
     };
 
     // replace all field values with current shadow values
@@ -337,6 +378,28 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.replaceAllResourcesWithShadows();
     };
 
+    // callback for key pressed in an edit box (input, textarea)
+    ns.inputValueChanged = function(e){
+        ns.checkField(e.target);
+    };
+
+    // when comparing fields, ignore differences in line endings between
+    // different platforms (eg: \r\n vs \n).
+    //
+    // this function makes sure all line endings a given string are \n.
+    ns.normaliseLineEndings = function(input){
+        if(input){
+            var reNewline = /\u000d[\u000a\u0085]|[\u0085\u2028\u000d\u000a]/g;
+            var nl = '\u000a'; // LF
+            return input.replace(reNewline, nl);
+        }
+        return "";
+    };
+
+    // ------------------------------------------------------------------------ 
+    // Standard Fields
+    // ------------------------------------------------------------------------ 
+
     // replace field value with current shadow values
     ns.replaceWithShadow = function(fieldName){
         var shadowValue = ns.shadows[fieldName];
@@ -344,6 +407,72 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         field.val(shadowValue);
         ns.checkField(field[0]);
     };
+
+    // click handler for 'copy value to field' button in shadow area
+    ns.copyValueClicked = function(e){
+        var fieldName = $(this).attr('id').substr("shadow-replace-".length);
+        ns.replaceWithShadow(fieldName);
+    };
+
+    // show match or shadow for standard form inputs (input, textarea, select)
+    ns.standardFieldChanged = function(field, fieldName, inputValue, shadowValue){
+        inputValue = ns.normaliseLineEndings(inputValue);
+        shadowValue = ns.normaliseLineEndings(shadowValue);
+
+        if(inputValue === shadowValue){
+            // fields match, so just set css style
+            $(field).addClass("revision-match");
+            $(field).next("div").fadeOut(ns.fadeTime, function(){
+                $(field).next("div").empty();
+                ns.checkAllMatch();
+            });
+        }
+        else{
+            // fields don't match - display shadow
+            $(field).removeClass("revision-match");
+            $(field).next("div").empty();
+
+            // different type of shadow depending on input type
+            var shadow = '<div class="shadow-value">';
+            if(field.nodeName.toLowerCase() === "input"){
+                shadow += shadowValue;
+            }
+            else if(field.nodeName.toLowerCase() === "textarea"){
+                var d = ns.dmp.diff_main(inputValue, shadowValue);
+                ns.dmp.diff_cleanupSemantic(d);
+                shadow += ns.dmp.diff_prettyHtml(d);
+            }
+            else if(field.nodeName.toLowerCase() === "select"){
+                // for selects, we want to display the text for the appropriate
+                // option rather than the value
+                shadow += $(field).children('option[value='+shadowValue+']').text();
+            }
+            shadow += '</div>';
+            $(field).next("div").append(shadow);
+            
+            // add the 'copy to field' button
+            //
+            // if the revision value was an empty string, display a different message
+            // on the button
+            var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
+                         'Copy value to field</button>'
+            if($.trim(shadowValue) === ""){
+                $(field).next("div").find(".shadow-value").append("[Empty]");
+                button = button.replace('Copy value to field', 'Clear this field');
+            }
+            $(field).next("div").append(button); 
+            $('button#shadow-replace-' + fieldName).click(ns.copyValueClicked);
+            $('button#shadow-replace-' + fieldName).button({
+                icons : {primary:'ui-icon-arrowthick-1-n'}
+            });
+
+            $(field).next("div").fadeIn(ns.fadeTime);
+        }
+    };
+
+    // ------------------------------------------------------------------------ 
+    // Resources Fields
+    // ------------------------------------------------------------------------ 
 
     // replace a row in the resources table with its current shadow values
     ns.replaceResourceWithShadow = function(rID){
@@ -396,12 +525,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
         
         ns.resourcesAddedOrRemoved();
-    };
-
-    // click handler for 'copy value to field' button in shadow area
-    ns.copyValueClicked = function(e){
-        var fieldName = $(this).attr('id').substr("shadow-replace-".length);
-        ns.replaceWithShadow(fieldName);
     };
 
     // click handler for 'copy' button in resource shadow area
@@ -518,80 +641,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             var rID = $(this).closest("tr").find("td.resource-id").find("input").val();
             $('#resources-shadow-' + rID).remove();
             ns.resourcesAddedOrRemoved();
-        }
-    };
-
-    // callback for key pressed in an edit box (input, textarea)
-    ns.inputValueChanged = function(e){
-        ns.checkField(e.target);
-    };
-
-    // when comparing fields, ignore differences in line endings between
-    // different platforms (eg: \r\n vs \n).
-    //
-    // this function makes sure all line endings a given string are \n.
-    ns.normaliseLineEndings = function(input){
-        if(input){
-            var reNewline = /\u000d[\u000a\u0085]|[\u0085\u2028\u000d\u000a]/g;
-            var nl = '\u000a'; // LF
-            return input.replace(reNewline, nl);
-        }
-        return "";
-    };
-
-    // show match or shadow for standard form inputs (input, textarea, select)
-    ns.standardFieldChanged = function(field, fieldName, inputValue, shadowValue){
-        inputValue = ns.normaliseLineEndings(inputValue);
-        shadowValue = ns.normaliseLineEndings(shadowValue);
-
-        if(inputValue === shadowValue){
-            // fields match, so just set css style
-            $(field).addClass("revision-match");
-            $(field).next("div").fadeOut(ns.fadeTime, function(){
-                $(field).next("div").empty();
-                ns.checkAllMatch();
-            });
-        }
-        else{
-            // fields don't match - display shadow
-            $(field).removeClass("revision-match");
-            $(field).next("div").empty();
-
-            // different type of shadow depending on input type
-            var shadow = '<div class="shadow-value">';
-            if(field.nodeName.toLowerCase() === "input"){
-                shadow += shadowValue;
-            }
-            else if(field.nodeName.toLowerCase() === "textarea"){
-                var d = ns.dmp.diff_main(inputValue, shadowValue);
-                ns.dmp.diff_cleanupSemantic(d);
-                shadow += ns.dmp.diff_prettyHtml(d);
-            }
-            else if(field.nodeName.toLowerCase() === "select"){
-                // for selects, we want to display the text for the appropriate
-                // option rather than the value
-                shadow += $(field).children('option[value='+shadowValue+']').text();
-            }
-            shadow += '</div>';
-            $(field).next("div").append(shadow);
-            
-            // add the 'copy to field' button
-            //
-            // if the revision value was an empty string, display a different message
-            // on the button
-            var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
-                         'Copy value to field</button>'
-            if($.trim(shadowValue) === ""){
-                $(field).next("div").find(".shadow-value").append("[Empty]");
-                button = button.replace('Copy value to field', 'Clear this field');
-            }
-            $(field).next("div").append(button); 
-            $('button#shadow-replace-' + fieldName).click(ns.copyValueClicked);
-            $('button#shadow-replace-' + fieldName).button({
-                icons : {primary:'ui-icon-arrowthick-1-n'}
-            });
-
-            $(field).next("div").fadeIn(ns.fadeTime);
         }
     };
 
@@ -790,33 +839,37 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.checkAllMatch();
     };
 
-    // input value changed, update match/shadow status
-    ns.checkField = function(field){
-        var fieldName = $(field).attr("name");
-        var inputValue = $(field).val();
-        var shadowValue = ns.shadows[fieldName];
+    // ------------------------------------------------------------------------ 
+    // Extras
+    // ------------------------------------------------------------------------ 
 
-        // ignore - empty fields to enter resources or extra keys/values
-        if(typeof shadowValue === "undefined"){
-            return;
+    // Called when revision changes
+    //
+    // Make sure that a shadow div is added after each extra
+    // Put the extra value in its own div
+    ns.updateExtras = function(){
+        for(var i = 0; i < ns.extrasFormInputs.length; i++){
+            if($(ns.extrasFormInputs[i]).next().attr("type") === "checkbox"){
+                $(ns.extrasFormInputs[i]).after('<div class="shadow"></div>');
+                $(ns.extrasFormInputs[i]).wrap('<div class="extras-delete" />');
+                // TODO: shouldn't need this class when fieldsets have IDs
+                $(ns.extrasFormInputs[i]).closest('dd').addClass("extras-dd");
+            }
         }
+    };
 
-        if(ns.formInputTypes[fieldName] == ns.STANDARD_FIELD){
-            ns.standardFieldChanged(field, fieldName, inputValue, shadowValue);
-        }
-        else if(ns.formInputTypes[fieldName] == ns.RESOURCES_FIELD){
-            ns.resourcesFieldChanged(field, fieldName);
-        }
-
+    // Called when a field in the extras area is edited
+    // Check match/shadow status
+    ns.extrasFieldChanged = function(field, fieldName){
         ns.checkAllMatch();
     };
 
-    // show either shadows or matches for all fields
-    ns.allMatchesAndShadows = function(){
-        $.each(ns.formInputs, function(index, value){
-            ns.checkField(value);
-        });
-        ns.resourcesAddedOrRemoved();
-        ns.checkAllMatch();
+    // checks for differences between the current list of extras and 
+    // the shadow list
+    //
+    // only displays shadows for added/removed rows, edit rows are handled by the
+    // extrasFieldChanged function
+    ns.extrasAddedOrRemoved = function(){
     };
+
 })(CKANEXT.MODERATEDEDITS, jQuery);

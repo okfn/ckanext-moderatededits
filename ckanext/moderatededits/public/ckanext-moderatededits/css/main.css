@@ -133,3 +133,5 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 }
 #resources-added { display: none; }
 #resources-removed { display: none; }
+
+.extras-dd input { margin-right: 1em; }
