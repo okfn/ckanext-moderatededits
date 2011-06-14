@@ -871,8 +871,49 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 $(ns.extrasFormInputs[i]).wrap('<div class="extras-value" />');
                 // TODO: shouldn't need this class when fieldsets have IDs
                 $(ns.extrasFormInputs[i]).closest('dd').addClass("extras-dd");
+                $(ns.extrasFormInputs[i]).closest('dd').prev('dt').addClass("extras-dt");
             }
         }
+
+        // TODO: replace this when fieldsets have IDs
+        var legends = $('#package-edit legend');
+        var extrasList = undefined;
+        for(var i = 0; i < legends.length; i++){
+            if($(legends[i]).text() === "Extras"){
+                extrasList = $(legends[i]).closest("fieldset").find("dl");
+                break;
+            }
+        }
+        if(!extrasList){
+            // can't find extras
+            return;
+        }
+
+        $.each(extrasList.find('dt'), function(i, value){
+            if(!$(value).hasClass("extras-dt")){
+                $(value).addClass("extras-dt-blank");
+            }
+        });
+        $.each(extrasList.find('dd'), function(i, value){
+            if(!$(value).hasClass("extras-dd")){
+                $(value).addClass("extras-dd-blank");
+            }
+        });
+
+        $('#extras-added').remove();
+        $('.extras-dd-blank').first().prev("dt").before(
+            '<div id="extras-added">' +
+            '<h3>Extras Added</h3>' +
+            '<dl id="extras-added-list"></dl></div>');
+        var blankExtras = $('.extras-dt-blank, .extras-dd-blank');
+        blankExtras.remove();
+        $('#extras-added-list').append(blankExtras);
+
+        $('#extras-removed').remove();
+        $('#extras-added').after(
+            '<div id="extras-removed">' +
+            '<h3>Extras Removed</h3>' +
+            '<dl id="extras-removed-list"></dl></div>');
     };
 
     ns.extrasAllResourcesWithShadows = function(){
@@ -986,6 +1027,37 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     // only displays shadows for added/removed rows, edit rows are handled by the
     // extrasFieldChanged function
     ns.extrasAddedOrRemoved = function(){
+        // get current list of extras by key
+        var extras = {};
+        var extrasInputs = $('.extras-dd').find('input');
+        extrasInputs.each(function(i){
+            if($(this).attr('name').substr("extras__N".length) === "__key"){
+                extras[$(this).val()] = $(extrasInputs[i+1]).val();
+            }
+        });
+
+        // check for extras added since shadow revision
+        var extrasAdded = "";
+        for(var i in extras){
+            if(ns.shadowExtras[i] === undefined){
+                // console.log($('input [value="'+i+'"]'));
+                console.log($('input [value="test-extras-3"]'));
+                // $('#' + valueName).removeClass("revision-match");
+                // row.find("td").addClass("shadow-value");
+                // row.find("td").addClass("resources-shadow-added");
+
+                // update input values html to match current values
+
+                // remove any shadow
+            }
+            else{
+                // make sure this is in the standard extras table
+            }
+        }
+        if(extrasAdded != ""){
+            // $('#extras-added').append(extrasAdded);
+        }
+
         ns.checkAllMatch();
     };
 
