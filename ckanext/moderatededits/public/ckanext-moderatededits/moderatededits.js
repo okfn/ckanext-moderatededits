@@ -964,15 +964,25 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     ns.extrasMoveRowToMain = function(key){
         var row = $('.'+key);
+        // var value = row
+        console.log(row);
         row.find('input').addClass("revision-match");
         row.find('.extras-value').show();
         row.find('.shadow').empty().hide();
+        row.find('input').show();
+        row.find('.extras-delete').show();
         var rowHtml = '<dt class="extras-dt ' + key + '">' +
             $(row[0]).html() + '</dt>' +
             '<dd class="extras-dd ' + key + '">' +
             $(row[1]).html() + '</dd>';
         row.remove();
         $('#extras').find('dl:first').append(rowHtml);
+    };
+
+    ns.extrasAddRemovedClicked = function(ev){
+        var key = $(ev.target).parent().attr('id').substr("extras-shadow-replace-".length);
+        ns.extrasMoveRowToMain(key);
+        ns.extrasAddedOrRemoved();
     };
 
     // checks for differences between the current list of extras and 
@@ -1035,7 +1045,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     'type="text" value="' + ns.shadowExtras[i] + '">' +
                     '</div>' +
                     '<div class="shadow">' +
-                    '<div class="shadow-value">' + ns.shadowExtras[i] + '</div>' +
+                    '<div class="shadow-value">' + ns.shadowExtras[i] + 
+                    '<div><button type="button" id="extras-shadow-replace-' + i + '">' +
+                    'Add</button></div>' +
+                    '</div>' +
                     '</div>' +
                     '<div class="extras-delete">' +
                     '<input type="checkbox" name="' + deletedName + '"> Delete' +
@@ -1049,6 +1062,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             $('#extras-removed').find('input').hide();
             $('#extras-removed').find('.extras-delete').hide();
             $('#extras-removed .shadow').show();
+            $('#extras-removed').find('button').click(ns.extrasAddRemovedClicked);
+            $('#extras-removed').find('button').button({
+                icons : {primary:'ui-icon-arrowthick-1-n'}
+            });
         }
         else{
             $('#extras-removed .shadow-value').remove();
