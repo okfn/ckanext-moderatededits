@@ -375,7 +375,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
         });
         ns.replaceAllResourcesWithShadows();
-        ns.extrasAllResourcesWithShadows();
+        ns.extrasReplaceAllWithShadows();
     };
 
     // callback for key pressed in an edit box (input, textarea)
@@ -868,7 +868,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             '<dl id="extras-removed-list"></dl></div>');
     };
 
-    ns.extrasAllResourcesWithShadows = function(){
+    ns.extrasReplaceAllWithShadows = function(){
         var fieldset = $('#extras');
 
         // replace edited extras
@@ -881,7 +881,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
         }
 
-        // remove extras rows
+        // remove added rows
         // rows = $('#resources-added').find("tr");
         // for(var i = 0; i < rows.length; i++){
         //     if($(rows[i]).hasClass("resources-shadow")){
@@ -960,6 +960,19 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.checkAllMatch();
     };
 
+    ns.extrasMoveRowToMain = function(key){
+        var row = $('.'+key);
+        row.find('input').addClass("revision-match");
+        row.find('.extras-value').show();
+        row.find('.shadow').empty().hide();
+        var rowHtml = '<dt class="extras-dt ' + key + '">' +
+            $(row[0]).html() + '</dt>' +
+            '<dd class="extras-dd ' + key + '">' +
+            $(row[1]).html() + '</dd>';
+        row.remove();
+        $('#extras').find('dl:first').append(rowHtml);
+    };
+
     // checks for differences between the current list of extras and 
     // the shadow list
     //
@@ -996,16 +1009,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 // make sure this extra is in the main extras list
                 var extrasList = $('#extras').find('dl:first');
                 if(!extrasList.find('.'+i).length){
-                    var row = $('.'+i);
-                    row.find('input').addClass("revision-match");
-                    row.find('.extras-value').show();
-                    row.find('.shadow').empty().hide();
-                    var rowHtml = '<dt class="extras-dt ' + i + '">' +
-                        $(row[0]).html() + '</dt>' +
-                        '<dd class="extras-dd ' + i + '">' +
-                        $(row[1]).html() + '</dd>';
-                    row.remove();
-                    extrasList.append(rowHtml);
+                    ns.extrasMoveRowToMain(i);
                 }
             }
         }
