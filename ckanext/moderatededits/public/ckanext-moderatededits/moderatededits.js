@@ -313,8 +313,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 // save extras values by key name
                 else if((i.substr(0, "extras__".length) === "extras__") &&
                         (i.substr("extras__".length + 1) === '__key')){
-                    ns.shadowExtras[ns.urlFriendly(data[i])] = 
-                        data["extras__" + i.charAt("extras__".length) + "__value"]; 
+                    var value = data["extras__" + i.charAt("extras__".length) + "__value"]; 
+                    var niceKey = ns.urlFriendly(data[i])
+                    ns.shadowExtras[niceKey] = new ns.Extra(data[i], value);
                 }
             }
             ns.allMatchesAndShadows();
@@ -835,6 +836,13 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         this.value = value;
     }
 
+    // get the shadow value for the extra with the given key
+    ns.extrasGetShadow = function(key){
+        if(ns.shadowExtras[ns.urlFriendly(key)]){
+            return ns.shadowExtras[ns.urlFriendly(key)].value;
+        }
+    };
+
     // Called when revision changes
     //
     // Make sure that a shadow div is added after each extra
@@ -842,7 +850,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.updateExtras = function(){
         for(var i = 0; i < ns.extrasFormInputs.length; i++){
             if($(ns.extrasFormInputs[i]).next().attr("type") === "checkbox"){
-                var key = $(ns.extrasFormInputs[i]).prev('input').val();
                 $(ns.extrasFormInputs[i]).after('<div class="shadow"></div>');
                 $(ns.extrasFormInputs[i]).wrap('<div class="extras-value" />');
                 $(ns.extrasFormInputs[i]).closest('dd').addClass("extras-dd");
@@ -883,9 +890,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
     };
 
-    // get the shadow value for the extra with the given key
-    ns.extrasGetShadow = function(key){
-    };
 
     ns.extrasReplaceAllWithShadows = function(){
         var fieldset = $('#extras');
@@ -923,7 +927,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     // replace extras field with shadow
     ns.extrasReplaceWithShadow = function(key){
-        var shadowValue = ns.shadowExtras[ns.urlFriendly(key)];
+        var shadowValue = ns.extrasGetShadow(key);
         var keyField = $('#extras input[value="' + key + '"]');
         var n = keyField.attr('name').charAt("extras__".length);
         var field = $('#package-edit input[name="extras__' + n + '__value"]');
@@ -940,7 +944,11 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
         var inputValue = $(field).val();
         var key = $(field).parent().prev().val();
-        var shadowValue = ns.shadowExtras[ns.urlFriendly(key)];
+        var shadowValue = ns.extrasGetShadow(key);
+
+        if(!shadowValue){
+            return;
+        }
 
         if(inputValue === shadowValue){
             // fields match, so just set css style
@@ -951,10 +959,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             });
         }
         else{
-            if(!shadowValue){
-                return;
-            }
-
             // fields don't match - display shadow
             $(field).removeClass("revision-match");
             var shadowDiv = $(field).parent().next("div").empty();
@@ -972,12 +976,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
             shadowDiv.append(button); 
             $('.extras-replace', shadowDiv).click(function(){
-                alert('ok');
-                // FIXME
-                // var key = $(this).attr('id').substr("extras-shadow-replace-".length);
-                // ns.extrasReplaceWithShadow(key);
+                var key = $(this).closest('dd').prev('dt').find('label').text();
+                ns.extrasReplaceWithShadow(key);
             });
-            $('#extras-shadow-replace-' + key).button({
+            $('.extras-replace').button({
                 icons : {primary:'ui-icon-arrowthick-1-n'}
             });
             shadowDiv.fadeIn(ns.fadeTime);
@@ -1043,18 +1045,20 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         var extrasInputs = $('#extras').find('dl:first').find('.extras-dd').find('input');
         extrasInputs.each(function(i){
             if($(this).attr('name').substr("extras__N".length) === "__key"){
-                extras[ns.urlFriendly($(this).val())] = $(extrasInputs[i+1]).val();
+                var key = $(this).val();
+                var value = $(extrasInputs[i+1]).val();
+                extras[ns.urlFriendly(key)] = new ns.Extra(key, value);
             }
         });
 
         // check for extras added since shadow revision
         for(var i in extras){
-            if(ns.shadowExtras[ns.urlFriendly(i)] === undefined){
-                var row = ns.extrasGetRow(i);
+            if(ns.extrasGetShadow(extras[i].key) === undefined){
+                var row = ns.extrasGetRow(extras[i].key);
                 row.find('input').removeClass("revision-match");
                 row.find('.extras-value').hide();
                 row.find('.shadow').empty().append(
-                    '<div class="shadow-value">' + extras[i] + '</div>'
+                    '<div class="shadow-value">' + extras[i].value + '</div>'
                 );
                 var rowHtml = '<dt class="extras-dt">' +
                     $(row[0]).html() + '</dt>' +
@@ -1065,8 +1069,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 $('#extras-added-list .shadow').show();
             }
             else{
-                if(!ns.extrasIsInMain(i)){
-                    ns.extrasMoveRowToMain(i);
+                if(!ns.extrasIsInMain(extras[i].key)){
+                    ns.extrasMoveRowToMain(extras[i].key);
                 }
             }
         }
@@ -1087,10 +1091,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     'type="hidden" value="' + i + '">' +
                     '<div class="extras-value">' +
                     '<input id="' + valueName + '" name="' + valueName + '" ' +
-                    'type="text" value="' + ns.shadowExtras[ns.urlFriendly(i)] + '">' +
+                    'type="text" value="' + ns.shadowExtras[i].value + '">' +
                     '</div>' +
                     '<div class="shadow">' +
-                    '<div class="shadow-value">' + ns.shadowExtras[ns.urlFriendly(i)] + 
+                    '<div class="shadow-value">' + ns.shadowExtras[i].value + 
                     '<div><button type="button">Add</button></div>' +
                     '</div>' +
                     '</div>' +
