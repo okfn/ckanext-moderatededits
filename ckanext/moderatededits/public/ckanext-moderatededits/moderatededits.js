@@ -313,8 +313,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 // save extras values by key name
                 else if((i.substr(0, "extras__".length) === "extras__") &&
                         (i.substr("extras__".length + 1) === '__key')){
-                    ns.shadowExtras[data[i]] = 
-                        data["extras__" + i.charAt("extras__".length) + "__value"]; 
+                    var value = data["extras__" + i.charAt("extras__".length) + "__value"]; 
+                    var niceKey = ns.urlFriendly(data[i])
+                    ns.shadowExtras[niceKey] = new ns.Extra(data[i], value);
                 }
             }
             ns.allMatchesAndShadows();
@@ -394,6 +395,16 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             return input.replace(reNewline, nl);
         }
         return "";
+    };
+
+    // return url friendly version of a string
+    ns.urlFriendly = function(string){
+        return string.toLowerCase() // change everything to lowercase
+            .replace(/^\s+|\s+$/g, "") // trim leading and trailing spaces		
+            .replace(/[_|\s]+/g, "-") // change all spaces and underscores to a hyphen
+            .replace(/[^a-z0-9-]+/g, "") // remove all non-alphanumeric characters except the hyphen
+            .replace(/[-]+/g, "-") // replace multiple instances of the hyphen with a single instance
+            .replace(/^-+|-+$/g, ""); // trim leading and trailing hyphens				
     };
 
     // ------------------------------------------------------------------------ 
@@ -819,6 +830,19 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     // Extras
     // ------------------------------------------------------------------------ 
 
+    // object representing an extra
+    ns.Extra = function(key, value){
+        this.key = key;
+        this.value = value;
+    }
+
+    // get the shadow value for the extra with the given key
+    ns.extrasGetShadow = function(key){
+        if(ns.shadowExtras[ns.urlFriendly(key)]){
+            return ns.shadowExtras[ns.urlFriendly(key)].value;
+        }
+    };
+
     // Called when revision changes
     //
     // Make sure that a shadow div is added after each extra
@@ -826,13 +850,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.updateExtras = function(){
         for(var i = 0; i < ns.extrasFormInputs.length; i++){
             if($(ns.extrasFormInputs[i]).next().attr("type") === "checkbox"){
-                var key = $(ns.extrasFormInputs[i]).prev('input').val();
                 $(ns.extrasFormInputs[i]).after('<div class="shadow"></div>');
                 $(ns.extrasFormInputs[i]).wrap('<div class="extras-value" />');
                 $(ns.extrasFormInputs[i]).closest('dd').addClass("extras-dd");
-                $(ns.extrasFormInputs[i]).closest('dd').addClass(key);
                 $(ns.extrasFormInputs[i]).closest('dd').prev('dt').addClass("extras-dt");
-                $(ns.extrasFormInputs[i]).closest('dd').prev('dt').addClass(key);
             }
         }
 
@@ -868,6 +889,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 '<dl id="extras-removed-list"></dl></div>');
         }
     };
+
 
     ns.extrasReplaceAllWithShadows = function(){
         var fieldset = $('#extras');
@@ -905,7 +927,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     // replace extras field with shadow
     ns.extrasReplaceWithShadow = function(key){
-        var shadowValue = ns.shadowExtras[key];
+        var shadowValue = ns.extrasGetShadow(key);
         var keyField = $('#extras input[value="' + key + '"]');
         var n = keyField.attr('name').charAt("extras__".length);
         var field = $('#package-edit input[name="extras__' + n + '__value"]');
@@ -922,7 +944,11 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
         var inputValue = $(field).val();
         var key = $(field).parent().prev().val();
-        var shadowValue = ns.shadowExtras[key];
+        var shadowValue = ns.extrasGetShadow(key);
+
+        if(!shadowValue){
+            return;
+        }
 
         if(inputValue === shadowValue){
             // fields match, so just set css style
@@ -942,18 +968,18 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             //
             // if the revision value was an empty string, display a different message
             // on the button
-            var button = '<button type="button" id="extras-shadow-replace-' + key + '">' +
+            var button = '<button type="button" class="extras-replace">' +
                          'Copy value to field</button>'
             if($.trim(shadowValue) === ""){
                 shadowDiv.find(".shadow-value").append("[Empty]");
                 button = button.replace('Copy value to field', 'Clear this field');
             }
             shadowDiv.append(button); 
-            $('#extras-shadow-replace-' + key).click(function(){
-                var key = $(this).attr('id').substr("extras-shadow-replace-".length);
+            $('.extras-replace', shadowDiv).click(function(){
+                var key = $(this).closest('dd').prev('dt').find('label').text();
                 ns.extrasReplaceWithShadow(key);
             });
-            $('#extras-shadow-replace-' + key).button({
+            $('.extras-replace').button({
                 icons : {primary:'ui-icon-arrowthick-1-n'}
             });
             shadowDiv.fadeIn(ns.fadeTime);
@@ -962,8 +988,30 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.checkAllMatch();
     };
 
+    // get the dt and dd of the extra with the given key
+    ns.extrasGetRow = function(key){
+        var dts = $('#extras').find('dt');
+        for(var i = 0; i < dts.length; i++){
+            if($(dts[i]).find('label').text() === key){
+                var row = $(dts[i]).add($(dts[i]).next('dd'));
+                return row;
+            }
+        }
+    };
+
+    // return true if there is an extra in the main list of extras with the given key
+    ns.extrasIsInMain = function(key){
+        var dts = $('#extras').find('dl:first').find('dt');
+        for(var i = 0; i < dts.length; i++){
+            if($(dts[i]).find('label').text() === key){
+                return true;
+            }
+        }
+        return false;
+    };
+
     ns.extrasMoveRowToMain = function(key){
-        var row = $('.'+key);
+        var row = ns.extrasGetRow(key);
         // TODO: update shadow when rows are added
         // var value = row
         row.find('input').addClass("revision-match");
@@ -971,16 +1019,16 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         row.find('.shadow').empty().hide();
         row.find('input').show();
         row.find('.extras-delete').show();
-        var rowHtml = '<dt class="extras-dt ' + key + '">' +
+        var rowHtml = '<dt class="extras-dt">' +
             $(row[0]).html() + '</dt>' +
-            '<dd class="extras-dd ' + key + '">' +
+            '<dd class="extras-dd">' +
             $(row[1]).html() + '</dd>';
         row.remove();
         $('#extras').find('dl:first').append(rowHtml);
     };
 
     ns.extrasAddRemovedClicked = function(ev){
-        var key = $(ev.target).parent().attr('id').substr("extras-shadow-replace-".length);
+        var key = $(ev.target).closest('dd').prev('dt').find('label').text();
         ns.extrasMoveRowToMain(key);
         ns.extrasAddedOrRemoved();
     };
@@ -993,35 +1041,37 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.extrasAddedOrRemoved = function(){
         // get current list of extras by key
         var extras = {};
-        var extrasInputs = $('#extras').find('dl:first').find('.extras-dd').find('input');
+        var extrasInputs = $('#extras').find('.extras-dd').find('input');
         extrasInputs.each(function(i){
             if($(this).attr('name').substr("extras__N".length) === "__key"){
-                extras[$(this).val()] = $(extrasInputs[i+1]).val();
+                var key = $(this).val();
+                var value = $(extrasInputs[i+1]).val();
+                extras[ns.urlFriendly(key)] = new ns.Extra(key, value);
             }
         });
 
         // check for extras added since shadow revision
         for(var i in extras){
-            if(ns.shadowExtras[i] === undefined){
-                var row = $('.'+i);
+            if(ns.extrasGetShadow(extras[i].key) === undefined){
+                var row = ns.extrasGetRow(extras[i].key);
                 row.find('input').removeClass("revision-match");
                 row.find('.extras-value').hide();
                 row.find('.shadow').empty().append(
-                    '<div class="shadow-value">' + extras[i] + '</div>'
+                    '<div class="shadow-value">' + extras[i].value + '</div>'
                 );
-                var rowHtml = '<dt class="extras-dt ' + i + '">' +
+                var rowHtml = '<dt class="extras-dt">' +
                     $(row[0]).html() + '</dt>' +
-                    '<dd class="extras-dd ' + i + '">' +
+                    '<dd class="extras-dd">' +
                     $(row[1]).html() + '</dd>';
                 row.remove();
                 $('#extras-added-list').prepend(rowHtml);
                 $('#extras-added-list .shadow').show();
             }
             else{
-                // make sure this extra is in the main extras list
-                var extrasList = $('#extras').find('dl:first');
-                if(!extrasList.find('.'+i).length){
-                    ns.extrasMoveRowToMain(i);
+                if(!ns.extrasIsInMain(extras[i].key)){
+                    ns.extrasMoveRowToMain(extras[i].key);
+                }
+                else{
                 }
             }
         }
@@ -1042,12 +1092,11 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     'type="hidden" value="' + i + '">' +
                     '<div class="extras-value">' +
                     '<input id="' + valueName + '" name="' + valueName + '" ' +
-                    'type="text" value="' + ns.shadowExtras[i] + '">' +
+                    'type="text" value="' + ns.shadowExtras[i].value + '">' +
                     '</div>' +
                     '<div class="shadow">' +
-                    '<div class="shadow-value">' + ns.shadowExtras[i] + 
-                    '<div><button type="button" id="extras-shadow-replace-' + i + '">' +
-                    'Add</button></div>' +
+                    '<div class="shadow-value">' + ns.shadowExtras[i].value + 
+                    '<div><button type="button">Add</button></div>' +
                     '</div>' +
                     '</div>' +
                     '<div class="extras-delete">' +
