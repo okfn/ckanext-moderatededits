@@ -892,13 +892,13 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
 
         // add deleted extras
-        // rows = $('#resources-removed').find("tr");
-        // for(var i = 0; i < rows.length; i++){
-        //     if($(rows[i]).hasClass("resources-shadow")){
-        //         var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
-        //         ns.resourcesReplaceRemoved(rID);
-        //     }
-        // }
+        rows = $('#extras-removed-list').find('dt');
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("extras-dt")){
+                var key = $(rows[i]).find('label').text();
+                ns.extrasMoveRowToMain(key);
+            }
+        }
         
         ns.extrasAddedOrRemoved();
     };
@@ -964,8 +964,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     ns.extrasMoveRowToMain = function(key){
         var row = $('.'+key);
+        // TODO: update shadow when rows are added
         // var value = row
-        console.log(row);
         row.find('input').addClass("revision-match");
         row.find('.extras-value').show();
         row.find('.shadow').empty().hide();
