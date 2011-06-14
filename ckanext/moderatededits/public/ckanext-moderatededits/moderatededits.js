@@ -1028,8 +1028,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     };
 
     ns.extrasAddRemovedClicked = function(ev){
-        var key = $(ev.target).parent().attr('id').substr("extras-shadow-replace-".length);
-        console.log(key);
+        var key = $(ev.target).closest('dd').prev('dt').find('label').text();
         ns.extrasMoveRowToMain(key);
         ns.extrasAddedOrRemoved();
     };
@@ -1042,7 +1041,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.extrasAddedOrRemoved = function(){
         // get current list of extras by key
         var extras = {};
-        var extrasInputs = $('#extras').find('dl:first').find('.extras-dd').find('input');
+        var extrasInputs = $('#extras').find('.extras-dd').find('input');
         extrasInputs.each(function(i){
             if($(this).attr('name').substr("extras__N".length) === "__key"){
                 var key = $(this).val();
@@ -1071,6 +1070,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             else{
                 if(!ns.extrasIsInMain(extras[i].key)){
                     ns.extrasMoveRowToMain(extras[i].key);
+                }
+                else{
                 }
             }
         }
