@@ -994,6 +994,19 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
             else{
                 // make sure this extra is in the main extras list
+                var extrasList = $('#extras').find('dl:first');
+                if(!extrasList.find('.'+i).length){
+                    var row = $('.'+i);
+                    row.find('input').addClass("revision-match");
+                    row.find('.extras-value').show();
+                    row.find('.shadow').empty().hide();
+                    var rowHtml = '<dt class="extras-dt ' + i + '">' +
+                        $(row[0]).html() + '</dt>' +
+                        '<dd class="extras-dd ' + i + '">' +
+                        $(row[1]).html() + '</dd>';
+                    row.remove();
+                    extrasList.append(rowHtml);
+                }
             }
         }
 
