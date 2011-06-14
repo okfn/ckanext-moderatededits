@@ -872,22 +872,23 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         var fieldset = $('#extras');
 
         // replace edited extras
-        extras = fieldset.find(".extras-dd");
+        extras = fieldset.find('.extras-dd');
         for(var i = 0; i < extras.length; i++){
-            var shadowDiv = $(extras[i]).find("div.shadow-value");
+            var shadowDiv = $(extras[i]).find('div.shadow-value');
             if(shadowDiv.length){
-                var key = $(extras[i]).find("input").first().val();
+                var key = $(extras[i]).find('input').first().val();
                 ns.extrasReplaceWithShadow(key);
             }
         }
 
         // remove added rows
-        // rows = $('#resources-added').find("tr");
-        // for(var i = 0; i < rows.length; i++){
-        //     if($(rows[i]).hasClass("resources-shadow")){
-        //         $(rows[i]).remove();
-        //     }
-        // }
+        rows = $('#extras-added-list').find('dt');
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass('extras-dt')){
+                $(rows[i]).next('dd').remove();
+                $(rows[i]).remove();
+            }
+        }
 
         // add deleted extras
         // rows = $('#resources-removed').find("tr");
