@@ -375,7 +375,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
         });
         ns.replaceAllResourcesWithShadows();
-        ns.extrasAllResourcesWithShadows();
+        ns.extrasReplaceAllWithShadows();
     };
 
     // callback for key pressed in an edit box (input, textarea)
@@ -861,42 +861,44 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
 
 
-        $('#extras-removed').remove();
-        $('#extras-added').after(
-            '<div id="extras-removed">' +
-            '<h3>Extras Removed</h3>' +
-            '<dl id="extras-removed-list"></dl></div>');
+        if(!$('#extras-removed').length){
+            $('#extras-added').after(
+                '<div id="extras-removed">' +
+                '<h3>Extras Removed</h3>' +
+                '<dl id="extras-removed-list"></dl></div>');
+        }
     };
 
-    ns.extrasAllResourcesWithShadows = function(){
+    ns.extrasReplaceAllWithShadows = function(){
         var fieldset = $('#extras');
 
         // replace edited extras
-        extras = fieldset.find(".extras-dd");
+        extras = fieldset.find('.extras-dd');
         for(var i = 0; i < extras.length; i++){
-            var shadowDiv = $(extras[i]).find("div.shadow-value");
+            var shadowDiv = $(extras[i]).find('div.shadow-value');
             if(shadowDiv.length){
-                var key = $(extras[i]).find("input").first().val();
+                var key = $(extras[i]).find('input').first().val();
                 ns.extrasReplaceWithShadow(key);
             }
         }
 
-        // remove extras rows
-        // rows = $('#resources-added').find("tr");
-        // for(var i = 0; i < rows.length; i++){
-        //     if($(rows[i]).hasClass("resources-shadow")){
-        //         $(rows[i]).remove();
-        //     }
-        // }
+        // remove added rows
+        rows = $('#extras-added-list').find('dt');
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass('extras-dt')){
+                $(rows[i]).next('dd').remove();
+                $(rows[i]).remove();
+            }
+        }
 
         // add deleted extras
-        // rows = $('#resources-removed').find("tr");
-        // for(var i = 0; i < rows.length; i++){
-        //     if($(rows[i]).hasClass("resources-shadow")){
-        //         var rID = $(rows[i]).attr('id').substr("resources-shadow-".length);
-        //         ns.resourcesReplaceRemoved(rID);
-        //     }
-        // }
+        rows = $('#extras-removed-list').find('dt');
+        for(var i = 0; i < rows.length; i++){
+            if($(rows[i]).hasClass("extras-dt")){
+                var key = $(rows[i]).find('label').text();
+                ns.extrasMoveRowToMain(key);
+            }
+        }
         
         ns.extrasAddedOrRemoved();
     };
@@ -960,6 +962,29 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.checkAllMatch();
     };
 
+    ns.extrasMoveRowToMain = function(key){
+        var row = $('.'+key);
+        // TODO: update shadow when rows are added
+        // var value = row
+        row.find('input').addClass("revision-match");
+        row.find('.extras-value').show();
+        row.find('.shadow').empty().hide();
+        row.find('input').show();
+        row.find('.extras-delete').show();
+        var rowHtml = '<dt class="extras-dt ' + key + '">' +
+            $(row[0]).html() + '</dt>' +
+            '<dd class="extras-dd ' + key + '">' +
+            $(row[1]).html() + '</dd>';
+        row.remove();
+        $('#extras').find('dl:first').append(rowHtml);
+    };
+
+    ns.extrasAddRemovedClicked = function(ev){
+        var key = $(ev.target).parent().attr('id').substr("extras-shadow-replace-".length);
+        ns.extrasMoveRowToMain(key);
+        ns.extrasAddedOrRemoved();
+    };
+
     // checks for differences between the current list of extras and 
     // the shadow list
     //
@@ -968,7 +993,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.extrasAddedOrRemoved = function(){
         // get current list of extras by key
         var extras = {};
-        var extrasInputs = $('.extras-dd').find('input');
+        var extrasInputs = $('#extras').find('dl:first').find('.extras-dd').find('input');
         extrasInputs.each(function(i){
             if($(this).attr('name').substr("extras__N".length) === "__key"){
                 extras[$(this).val()] = $(extrasInputs[i+1]).val();
@@ -976,7 +1001,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         });
 
         // check for extras added since shadow revision
-        var extrasAdded = [];
         for(var i in extras){
             if(ns.shadowExtras[i] === undefined){
                 var row = $('.'+i);
@@ -984,17 +1008,68 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 row.find('.extras-value').hide();
                 row.find('.shadow').empty().append(
                     '<div class="shadow-value">' + extras[i] + '</div>'
-                ).show();
+                );
                 var rowHtml = '<dt class="extras-dt ' + i + '">' +
                     $(row[0]).html() + '</dt>' +
                     '<dd class="extras-dd ' + i + '">' +
                     $(row[1]).html() + '</dd>';
                 row.remove();
                 $('#extras-added-list').prepend(rowHtml);
+                $('#extras-added-list .shadow').show();
             }
             else{
                 // make sure this extra is in the main extras list
+                var extrasList = $('#extras').find('dl:first');
+                if(!extrasList.find('.'+i).length){
+                    ns.extrasMoveRowToMain(i);
+                }
             }
+        }
+
+        // check for extras removed since shadow revision
+        var lastLabel = $('#extras-added-list').find('dt:last').find('label');
+        var n = parseInt(lastLabel.attr('for').charAt("extras__".length), 10) + 1;
+        var extrasRemoved = "";
+        for(var i in ns.shadowExtras){
+            if(extras[i] === undefined){
+                var keyName = "extras__" + n + "__key";
+                var valueName = "extras__" + n + "__value";
+                var deletedName = "extras__" + n + "__deleted";
+                extrasRemoved += '<dt class="extras-dt ' + i + '">' +
+                    '<label for="' + valueName +'">' + i + '</label></dt>' +
+                    '<dd class="extras-dd ' + i + '">' +
+                    '<input id="' + keyName + '" name="' + keyName + '" ' +
+                    'type="hidden" value="' + i + '">' +
+                    '<div class="extras-value">' +
+                    '<input id="' + valueName + '" name="' + valueName + '" ' +
+                    'type="text" value="' + ns.shadowExtras[i] + '">' +
+                    '</div>' +
+                    '<div class="shadow">' +
+                    '<div class="shadow-value">' + ns.shadowExtras[i] + 
+                    '<div><button type="button" id="extras-shadow-replace-' + i + '">' +
+                    'Add</button></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="extras-delete">' +
+                    '<input type="checkbox" name="' + deletedName + '"> Delete' +
+                    '</div>' +
+                    '</dd>';
+            }
+        }
+        if(extrasRemoved != ""){
+            $('#extras-removed-list').append(extrasRemoved);
+            $('#extras-removed').show();
+            $('#extras-removed').find('input').hide();
+            $('#extras-removed').find('.extras-delete').hide();
+            $('#extras-removed .shadow').show();
+            $('#extras-removed').find('button').click(ns.extrasAddRemovedClicked);
+            $('#extras-removed').find('button').button({
+                icons : {primary:'ui-icon-arrowthick-1-n'}
+            });
+        }
+        else{
+            $('#extras-removed .shadow-value').remove();
+            $('#extras-removed').hide();
         }
 
         ns.checkAllMatch();
