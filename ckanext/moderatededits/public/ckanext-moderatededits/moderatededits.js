@@ -57,11 +57,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         $('a#revision-select-latest').click(function(){
             ns.changeRevision(ns.lastApproved);
         });
-        //add the input so backend knows this is a revision submit
-        // TODO: remove this when revision system has been updated to check
-        // the config variable set in plugin.py
-        hidden_input = '<input name="moderated" value="True" type="hidden">';
-        $('.submit input[name="preview"]').before(hidden_input); 
         // add new button for saving a moderated version
         if(ns.isModerator){
             var saveModHtml = ' <input name="save" type="submit" ' +
@@ -155,11 +150,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             else{
                 var html = "";
                 for(var i in response){
-                    // TODO: we should really have a way of getting a
-                    // date format based on location.
-                    //
-                    // For now: truncate the timestamp to get the date.
-                    // Want YYYY-MM-DD so take the first 10 characters.
                     var revisionDate = response[i].timestamp;
 
                     html += '<li ';
@@ -283,20 +273,14 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.formInputs = $('#package-edit input[type=text], select[id!="state"], textarea');
         // for each form input, decide whether it should have the standard
         // shadow, or if it belongs to a special case (resources, extras, etc)
-        //
-        // here we do this by checking which fieldset the form item is in
-        //
-        // another option would be to check the name of the item, as currently
-        // resources start with 'resources__', extras with 'extras__', etc.
         ns.formInputTypes = {};
         ns.extrasFormInputs = [];
         $.each(ns.formInputs, function(index, value){
-            // TODO: replace this when fieldsets have IDs
-            var legend = $(value).closest('fieldset').children('legend').text();
-            if(legend === 'Resources'){
+            var fieldsetID = $(value).closest('fieldset').attr('id');
+            if(fieldsetID === 'resources'){
                 var inputType = ns.RESOURCES_FIELD;
             }
-            else if(legend === 'Extras'){
+            else if(fieldsetID === 'extras'){
                 var inputType = ns.EXTRAS_FIELD;
                 ns.extrasFormInputs.push(ns.formInputs[index]);
             }
@@ -500,20 +484,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     // replace all rows in the resources table with its current shadow values
     ns.replaceAllResourcesWithShadows = function(){
-        // TODO: replace this when fieldsets have IDs
-        var legends = $('#package-edit legend');
-        var fieldset = undefined;
-        var rows = [];
-        for(var i = 0; i < legends.length; i++){
-            if($(legends[i]).text() === "Resources"){
-                fieldset = $(legends[i]).closest("fieldset");
-                break;
-            }
-        }
-        if(!fieldset){
-            // can't find resources fieldset
-            return;
-        }
+        var fieldset = $('#resources');
 
         // replace edited rows
         rows = fieldset.find("table").first().find("tbody").find("tr");
@@ -552,19 +523,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     // add a new row to the resources table
     ns.resourcesAddRow = function(url, format, description, id){
-        // TODO: replace this when fieldsets have IDs
-        var legends = $('#package-edit legend');
-        var table = undefined;
-        for(var i = 0; i < legends.length; i++){
-            if($(legends[i]).text() === "Resources"){
-                table = $(legends[i]).closest("fieldset").find("table").first();
-                break;
-            }
-        }
-        if(!table){
-            // can't find resources table
-            return;
-        }
+        var table = $('#resources').find('table').first();
 
         // create the new row
         var row = '<tr>' +
@@ -867,27 +826,17 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.updateExtras = function(){
         for(var i = 0; i < ns.extrasFormInputs.length; i++){
             if($(ns.extrasFormInputs[i]).next().attr("type") === "checkbox"){
+                var key = $(ns.extrasFormInputs[i]).prev('input').val();
                 $(ns.extrasFormInputs[i]).after('<div class="shadow"></div>');
                 $(ns.extrasFormInputs[i]).wrap('<div class="extras-value" />');
-                // TODO: shouldn't need this class when fieldsets have IDs
                 $(ns.extrasFormInputs[i]).closest('dd').addClass("extras-dd");
+                $(ns.extrasFormInputs[i]).closest('dd').addClass(key);
                 $(ns.extrasFormInputs[i]).closest('dd').prev('dt').addClass("extras-dt");
+                $(ns.extrasFormInputs[i]).closest('dd').prev('dt').addClass(key);
             }
         }
 
-        // TODO: replace this when fieldsets have IDs
-        var legends = $('#package-edit legend');
-        var extrasList = undefined;
-        for(var i = 0; i < legends.length; i++){
-            if($(legends[i]).text() === "Extras"){
-                extrasList = $(legends[i]).closest("fieldset").find("dl");
-                break;
-            }
-        }
-        if(!extrasList){
-            // can't find extras
-            return;
-        }
+        var extrasList = $('#extras').children("dl:first");
 
         $.each(extrasList.find('dt'), function(i, value){
             if(!$(value).hasClass("extras-dt")){
@@ -900,14 +849,17 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
         });
 
-        $('#extras-added').remove();
-        $('.extras-dd-blank').first().prev("dt").before(
-            '<div id="extras-added">' +
-            '<h3>Extras Added</h3>' +
-            '<dl id="extras-added-list"></dl></div>');
-        var blankExtras = $('.extras-dt-blank, .extras-dd-blank');
-        blankExtras.remove();
-        $('#extras-added-list').append(blankExtras);
+        if(!$('#extras-added').length){
+            var blankExtras = $('.extras-dt-blank, .extras-dd-blank');
+            blankExtras.remove();
+
+            $('#extras').find('dl:first').after(
+                '<div id="extras-added">' +
+                '<h3>Extras Added</h3>' +
+                '<dl id="extras-added-list"></dl></div>');
+            $('#extras-added-list').append(blankExtras);
+        }
+
 
         $('#extras-removed').remove();
         $('#extras-added').after(
@@ -917,19 +869,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     };
 
     ns.extrasAllResourcesWithShadows = function(){
-        // TODO: replace this when fieldsets have IDs
-        var legends = $('#package-edit legend');
-        var fieldset = undefined;
-        var rows = [];
-        for(var i = 0; i < legends.length; i++){
-            if($(legends[i]).text() === "Extras"){
-                fieldset = $(legends[i]).closest("fieldset");
-                break;
-            }
-        }
-        if(!fieldset){
-            return;
-        }
+        var fieldset = $('#extras');
 
         // replace edited extras
         extras = fieldset.find(".extras-dd");
@@ -964,8 +904,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     // replace extras field with shadow
     ns.extrasReplaceWithShadow = function(key){
         var shadowValue = ns.shadowExtras[key];
-        // TODO: limit this to extras when fieldsets have IDs
-        var keyField = $('#package-edit input[value="' + key + '"]');
+        var keyField = $('#extras input[value="' + key + '"]');
         var n = keyField.attr('name').charAt("extras__".length);
         var field = $('#package-edit input[name="extras__' + n + '__value"]');
         field.val(shadowValue);
@@ -1037,25 +976,25 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         });
 
         // check for extras added since shadow revision
-        var extrasAdded = "";
+        var extrasAdded = [];
         for(var i in extras){
             if(ns.shadowExtras[i] === undefined){
-                // console.log($('input [value="'+i+'"]'));
-                console.log($('input [value="test-extras-3"]'));
-                // $('#' + valueName).removeClass("revision-match");
-                // row.find("td").addClass("shadow-value");
-                // row.find("td").addClass("resources-shadow-added");
-
-                // update input values html to match current values
-
-                // remove any shadow
+                var row = $('.'+i);
+                row.find('input').removeClass("revision-match");
+                row.find('.extras-value').hide();
+                row.find('.shadow').empty().append(
+                    '<div class="shadow-value">' + extras[i] + '</div>'
+                ).show();
+                var rowHtml = '<dt class="extras-dt ' + i + '">' +
+                    $(row[0]).html() + '</dt>' +
+                    '<dd class="extras-dd ' + i + '">' +
+                    $(row[1]).html() + '</dd>';
+                row.remove();
+                $('#extras-added-list').prepend(rowHtml);
             }
             else{
-                // make sure this is in the standard extras table
+                // make sure this extra is in the main extras list
             }
-        }
-        if(extrasAdded != ""){
-            // $('#extras-added').append(extrasAdded);
         }
 
         ns.checkAllMatch();
