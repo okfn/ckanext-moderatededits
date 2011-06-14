@@ -861,11 +861,12 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
 
 
-        $('#extras-removed').remove();
-        $('#extras-added').after(
-            '<div id="extras-removed">' +
-            '<h3>Extras Removed</h3>' +
-            '<dl id="extras-removed-list"></dl></div>');
+        if(!$('#extras-removed').length){
+            $('#extras-added').after(
+                '<div id="extras-removed">' +
+                '<h3>Extras Removed</h3>' +
+                '<dl id="extras-removed-list"></dl></div>');
+        }
     };
 
     ns.extrasReplaceAllWithShadows = function(){
@@ -982,7 +983,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.extrasAddedOrRemoved = function(){
         // get current list of extras by key
         var extras = {};
-        var extrasInputs = $('.extras-dd').find('input');
+        var extrasInputs = $('#extras').find('dl:first').find('.extras-dd').find('input');
         extrasInputs.each(function(i){
             if($(this).attr('name').substr("extras__N".length) === "__key"){
                 extras[$(this).val()] = $(extrasInputs[i+1]).val();
@@ -990,7 +991,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         });
 
         // check for extras added since shadow revision
-        var extrasAdded = [];
         for(var i in extras){
             if(ns.shadowExtras[i] === undefined){
                 var row = $('.'+i);
@@ -998,13 +998,14 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 row.find('.extras-value').hide();
                 row.find('.shadow').empty().append(
                     '<div class="shadow-value">' + extras[i] + '</div>'
-                ).show();
+                );
                 var rowHtml = '<dt class="extras-dt ' + i + '">' +
                     $(row[0]).html() + '</dt>' +
                     '<dd class="extras-dd ' + i + '">' +
                     $(row[1]).html() + '</dd>';
                 row.remove();
                 $('#extras-added-list').prepend(rowHtml);
+                $('#extras-added-list .shadow').show();
             }
             else{
                 // make sure this extra is in the main extras list
@@ -1013,6 +1014,45 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     ns.extrasMoveRowToMain(i);
                 }
             }
+        }
+
+        // check for extras removed since shadow revision
+        var lastLabel = $('#extras-added-list').find('dt:last').find('label');
+        var n = parseInt(lastLabel.attr('for').charAt("extras__".length), 10) + 1;
+        var extrasRemoved = "";
+        for(var i in ns.shadowExtras){
+            if(extras[i] === undefined){
+                var keyName = "extras__" + n + "__key";
+                var valueName = "extras__" + n + "__value";
+                var deletedName = "extras__" + n + "__deleted";
+                extrasRemoved += '<dt class="extras-dt ' + i + '">' +
+                    '<label for="' + valueName +'">' + i + '</label></dt>' +
+                    '<dd class="extras-dd ' + i + '">' +
+                    '<input id="' + keyName + '" name="' + keyName + '" ' +
+                    'type="hidden" value="' + i + '">' +
+                    '<div class="extras-value">' +
+                    '<input id="' + valueName + '" name="' + valueName + '" ' +
+                    'type="text" value="' + ns.shadowExtras[i] + '">' +
+                    '</div>' +
+                    '<div class="shadow">' +
+                    '<div class="shadow-value">' + ns.shadowExtras[i] + '</div>' +
+                    '</div>' +
+                    '<div class="extras-delete">' +
+                    '<input type="checkbox" name="' + deletedName + '"> Delete' +
+                    '</div>' +
+                    '</dd>';
+            }
+        }
+        if(extrasRemoved != ""){
+            $('#extras-removed-list').append(extrasRemoved);
+            $('#extras-removed').show();
+            $('#extras-removed').find('input').hide();
+            $('#extras-removed').find('.extras-delete').hide();
+            $('#extras-removed .shadow').show();
+        }
+        else{
+            $('#extras-removed .shadow-value').remove();
+            $('#extras-removed').hide();
         }
 
         ns.checkAllMatch();
