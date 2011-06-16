@@ -468,23 +468,30 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
             shadow += '</div>';
             $(field).next("div").append(shadow);
-            
-            // add the 'copy to field' button
-            //
-            // if the revision value was an empty string, display a different message
-            // on the button
-            var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
-                         'Copy value to field</button>'
+
+            if(field.nodeName.toLowerCase() === "textarea"){
+                // add the 'copy to field' button
+                //
+                // if the revision value was an empty string, display a different message
+                // on the button
+                if($.trim(shadowValue) === ""){
+                    var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
+                                 'Clear this field</button>'
+                }
+                else{
+                    var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
+                                 'Copy value to field</button>'
+                }
+                $(field).next("div").append(button);
+                $('button#shadow-replace-' + fieldName).click(ns.copyValueClicked);
+                $('button#shadow-replace-' + fieldName).button({
+                    icons : {primary:'ui-icon-arrowthick-1-n'}
+                });
+            }
+
             if($.trim(shadowValue) === ""){
                 $(field).next("div").find(".shadow-value").append("[Empty]");
-                button = button.replace('Copy value to field', 'Clear this field');
             }
-            $(field).next("div").append(button); 
-            $('button#shadow-replace-' + fieldName).click(ns.copyValueClicked);
-            $('button#shadow-replace-' + fieldName).button({
-                icons : {primary:'ui-icon-arrowthick-1-n'}
-            });
-
             $(field).next("div").fadeIn(ns.fadeTime);
         }
     };
