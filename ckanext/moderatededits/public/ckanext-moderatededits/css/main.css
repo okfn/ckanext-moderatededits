@@ -58,7 +58,8 @@
     padding: 5px 25px 5px 5px;
     vertical-align: middle; 
 }
-.revision-approved .revision-list-buttons { padding-left: 10px; }
+.revision-approved .revision-list-buttons { padding-left: 8px; }
+.revision-approved #revision-list-author { padding-left: 8px; }
 #revision-replace-all-warning { display: none; }
 #revision-commit-message { display: none; }
 li.revision-approved:before {

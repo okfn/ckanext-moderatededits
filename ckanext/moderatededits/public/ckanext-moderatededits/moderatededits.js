@@ -164,7 +164,6 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     // set active/inactive classes
                     if(i == ns.activeRevision){
                         html += 'id="revision-active" ';
-                        // save the revision ID and log message
                         ns.activeRevisionID = response[i].revision_id;
                     }
                     // set approved class
@@ -183,6 +182,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                         }
                         html += '<span id="revision-active-text">' + revisionDate +  
                                 '</span>' +
+                                '<div id="revision-list-author">' +
+                                'Author: ' + response[i].author + '</div>' + 
                                 '<div class="revision-list-buttons">' +
                                 '<button id="revision-replace-all"' + 
                                 ' title="Replace all fields with values from this revision"></button>' +
