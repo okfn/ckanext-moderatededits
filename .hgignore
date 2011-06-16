@@ -7,4 +7,5 @@ syntax: glob
 test.db
 data
 screenshots
+database
 pip*.txt
