@@ -23,6 +23,22 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         // find out if the current user is a moderator by looking for the
         // option to change the package state
         ns.isModerator = $('#state').length > 0;
+        // add new button for saving a moderated version
+        if(ns.isModerator){
+            var saveApproved = ' <input name="save" type="submit" value="Approve" />';
+            $('.submit input[name="save"]').replaceWith(saveApproved);
+        }
+        else{
+            // remove read-only fields
+            var dt = $('#basic-information label[for="name"]').parent();
+            dt.nextUntil('dt').remove();
+            dt.remove();
+            $('#groups').remove();
+        }
+        // change default preview/submit buttons to match style
+        $('.submit input[name="preview"]').button(); 
+        $('.submit input[name="save"]').button(); 
+
         // enable the sidebar which is where the revision list goes by default
         $('body').removeClass("hide-sidebar");
         // Add the 'resources added' and 'resources removed' sections
@@ -49,23 +65,12 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.shadowResourceNumbers = {};
         ns.shadowExtras = {};
 
-        // display revision info box and list
-        ns.revisionList();
         // add click handler for 'click here for more information' link in info box
         $('a#revision-show-mod-info').click(ns.showModInfoClicked);
         // add click handler for 'select latest revision' link in info box
         $('a#revision-select-latest').click(function(){
             ns.changeRevision(ns.lastApproved);
         });
-        // add new button for saving a moderated version
-        if(ns.isModerator){
-            var saveModHtml = ' <input name="save" type="submit" ' +
-                'value="Approve" />';
-            $('.submit input[name="save"]').after(saveModHtml);
-        }
-        // change default preview/submit buttons to match style
-        $('.submit input[name="preview"]').button(); 
-        $('.submit input[name="save"]').button(); 
         // disable moveup/movedown functionality on resources form for now
         $('a.moveUp').remove();
         $('a.moveDown').remove();
@@ -77,6 +82,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         // add a diff-match-patch object to get a diff of textareas
         ns.dmp = new diff_match_patch();
         ns.dmp.Diff_Timeout = 1;
+
+        // display revision info box and list
+        ns.revisionList();
     };
 
     // if the active revision is not approved,
