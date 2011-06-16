@@ -979,24 +979,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             var shadowDiv = $(field).parent().next("div").empty();
             var shadow = '<div class="shadow-value">' + shadowValue + '</div>';
             shadowDiv.append(shadow);
-            // add the 'copy to field' button
-            //
-            // if the revision value was an empty string, display a different message
-            // on the button
-            var button = '<button type="button" class="extras-replace">' +
-                         'Copy value to field</button>'
             if($.trim(shadowValue) === ""){
                 shadowDiv.find(".shadow-value").append("[Empty]");
-                button = button.replace('Copy value to field', 'Clear this field');
             }
-            shadowDiv.append(button); 
-            $('.extras-replace', shadowDiv).click(function(){
-                var key = $(this).closest('dd').prev('dt').find('label').text();
-                ns.extrasReplaceWithShadow(key);
-            });
-            $('.extras-replace').button({
-                icons : {primary:'ui-icon-arrowthick-1-n'}
-            });
             shadowDiv.fadeIn(ns.fadeTime);
         }
 
