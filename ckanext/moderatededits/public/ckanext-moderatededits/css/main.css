@@ -117,12 +117,23 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 .shadow-value-medium { width: 25em; }
 .resources-shadow td { 
     background-color: #fff;
-    vertical-align: middle;
+    vertical-align: top;
 }
 #package-edit .resources-shadow td { 
-    border: 1px solid #f8dc30; 
-    padding-left: 16px;
+    border: 0;
 }
+#package-edit .resources-shadow fieldset { 
+    margin: 0;
+    padding: 4px;
+    border: 1px solid #f8dc30; 
+}
+#package-edit .resources-shadow fieldset legend { 
+    font-size: 1em;
+    font-weight: normal;
+    margin-bottom: 1em;
+    padding: 4px;
+}
+td.resources-shadow-controls { vertical-align: middle; }
 .wordwrap { 
    white-space: pre-wrap;      /* CSS3 */   
    white-space: -moz-pre-wrap; /* Firefox */    

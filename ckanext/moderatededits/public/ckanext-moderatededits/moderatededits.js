@@ -686,20 +686,27 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             if(!row.next().hasClass("resources-shadow")){
                 var shadowHtml = '<tr id="resources-shadow-' + rID + '" class="resources-shadow">' +
                     '<td class="resource-url shadow-value">' + 
+                    '<fieldset><legend>Old Value</legend>' +
                     // this hidden input tag is needed for the flexitable.js 
                     // removeRow function to work properly
                     '<input type="hidden" name="resources-shadow__' + shadowNumber + '__url" />' +
                     '<div class="shadow-value-short wordwrap">' + shadowURL + '</div>' +
+                    '</fieldset>' + 
                     '</td>' +
                     '<td class="resource-format shadow-value">' + 
+                    '<fieldset><legend>Old Value</legend>' +
                     '<div class="shadow-value-short wordwrap">' + shadowFormat + '</div>' +
+                    '</fieldset>' + 
                     '</td>' +
                     '<td class="resource-description shadow-value">' + 
+                    '<fieldset><legend>Old Value</legend>' +
                     '<div class="shadow-value-medium wordwrap">' + shadowDesc + '</div>' +
+                    '</fieldset>' + 
                     '</td>' +
                     '<td class="resource-hash"></td>' +
                     '<td class="resource-id"></td>' +
-                    '<td><div class="controls">' +
+                    '<td class="resources-shadow-controls">' +
+                    '<div class="controls">' +
                     '<button type="button" id="resources-shadow-replace-' +rID + '">' +
                     'Copy</button></div></td>' +
                     '</tr>';
