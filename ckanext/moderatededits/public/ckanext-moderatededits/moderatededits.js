@@ -27,6 +27,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         if(ns.isModerator){
             var saveApproved = ' <input name="save" type="submit" value="Approve" />';
             $('.submit input[name="save"]').replaceWith(saveApproved);
+            // enable the sidebar (where revision list is located)
+            $('body').removeClass("hide-sidebar");
         }
         else{
             // remove read-only fields
@@ -34,13 +36,13 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             dt.nextUntil('dt').remove();
             dt.remove();
             $('#groups').remove();
+            // hide revision list
+            $('#revision-list-widget').hide();
         }
         // change default preview/submit buttons to match style
         $('.submit input[name="preview"]').button(); 
         $('.submit input[name="save"]').button(); 
 
-        // enable the sidebar which is where the revision list goes by default
-        $('body').removeClass("hide-sidebar");
         // Add the 'resources added' and 'resources removed' sections
         var resourcesAdded = '<div id="resources-added">' +
             '<h3>Resources Added</h3>' +
@@ -83,8 +85,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.dmp = new diff_match_patch();
         ns.dmp.Diff_Timeout = 1;
 
-        // display revision info box and list
-        ns.revisionList();
+        // get revision info
+        ns.getRevisions();
     };
 
     // if the active revision is not approved,
@@ -95,7 +97,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
     ns.lastApprovedRevision = function(){
         var lastApproved = ns.activeRevision;
 
-        if(ns.revisions && ns.revisions.length > 0){
+        if(ns.revisions && (ns.revisions.length > 0)){
             if(!ns.revisions[ns.activeRevision].approved){
                 // get the latest approved revision
                 for(var i in ns.revisions){
@@ -141,115 +143,17 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         $('#revision-moderator-info').slideToggle();
     };
 
-    // change revision
-    ns.changeRevision = function(index){
-        ns.activeRevision = index;
-        ns.revisionList();
-    };
-
-    // display the revision list
     // save the list of revisions for this package to this.revisions
     // save the revision ID and log message for the current active revision
-    ns.revisionList = function(){
+    ns.getRevisions = function(index){
         var success = function(response){
-            if(response.length == 0){
-                $('#revision-list-msg').empty().replaceWith("No previous revisions found.");
-            }
-            else{
-                var html = "";
-                for(var i in response){
-                    var revisionDate = response[i].timestamp;
-
-                    html += '<li ';
-                    // set active/inactive classes
-                    if(i == ns.activeRevision){
-                        html += 'id="revision-active" ';
-                        ns.activeRevisionID = response[i].revision_id;
-                    }
-                    // set approved class
-                    if(response[i].approved){
-                        html += 'class="revision-approved"';
-                    }
-                    else{
-                        html += 'class="revision-not-approved"';
-                    }
-                    html += '>';
-
-                    if(i == ns.activeRevision){
-                        var commitMessage = response[i].message;
-                        if(commitMessage === ""){
-                            commitMessage = "There was no commit message for this revision";
-                        }
-                        html += '<span id="revision-active-text">' + revisionDate +  
-                                '</span>' +
-                                '<div id="revision-list-author">' +
-                                'Author: ' + response[i].author + '</div>' + 
-                                '<div class="revision-list-buttons">' +
-                                '<button id="revision-replace-all"' + 
-                                ' title="Replace all fields with values from this revision"></button>' +
-                                '<button id="revision-toggle-info"' + 
-                                ' title="Display the commit message for this revision"></button>' +
-                                '</div>' +
-                                '<div id="revision-commit-message">' + commitMessage + '</div>' +
-                                '<div id="revision-replace-all-warning"' +
-                                ' title="Replace all fields with values from this revision?">' +
-                                'This action will replace any changes that you have made to ' +
-                                'the package edit form with the values from this revision.' +
-                                '</div>';
-                    }
-                    else{
-                        html += '<a id="revision-' + i.toString() + '" ' +
-                                'class="revision-list-button">' +
-                                revisionDate +
-                                '</a>';
-                    }
-                    html += '</li>';
-                }
-                $('#revision-list').empty().append(html);
-                // add a click handlers for revision list URLs
-                $('a.revision-list-button').click(function(ev){
-                    ns.changeRevision($(ev.target).attr('id').substr("revision-".length));
-                });
-                // add dialog for replace all confirmation box
-                $('#revision-replace-all-warning').dialog({
-                    autoOpen: false,
-                    resizable: false,
-                    modal: true,
-                    buttons: {
-				        "Replace all fields":function(){
-                            ns.replaceAllWithShadows();
-                            $(this).dialog("close");
-				        },
-                        Cancel:function(){
-					        $(this).dialog("close");
-                        }
-                    }
-                });
-                // add button and click handler for 'replace all' button
-                $('#revision-replace-all').button({
-                    text: false, icons : {primary:'ui-icon-transferthick-e-w'}
-                });
-                $('#revision-replace-all').click(function(){
-                    $('#revision-replace-all-warning').dialog('open');
-                });
-                // add button and click handler for info button
-                $('#revision-toggle-info').button({
-                    text: false, icons : {primary:'ui-icon-info'}
-                });
-                $('#revision-toggle-info').click(function(){
-                    $('#revision-commit-message').slideToggle();
-                });
-            }
-
-            // update the revision info box
             ns.revisions = response;
-            ns.revisionInfo();
-            // update the lists of form input fields
-            ns.updateFormInputs();
-            // update the shadow field values
-            ns.updateShadows();
-            // update extras
-            ns.updateExtras();
+            for(var i in ns.revisions){
+                if(i == ns.activeRevision){
+                    ns.activeRevisionID = ns.revisions[i].revision_id;
+                }
+            }
+            ns.changeRevision(ns.activeRevision);
         };
 
         var error = function(response){
@@ -262,6 +166,117 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 success: success,
                 error: error
         }); 
+    };
+
+    // change revision
+    ns.changeRevision = function(index){
+        // update revision list
+        ns.activeRevision = index;
+        ns.revisionList();
+        // update the revision info box
+        ns.revisionInfo();
+        // update the lists of form input fields
+        ns.updateFormInputs();
+        // update the shadow field values
+        ns.updateShadows();
+        // update extras
+        ns.updateExtras();
+    };
+
+    // display the revision list
+    ns.revisionList = function(){
+        if(!ns.isModerator){
+            return;
+        }
+
+        if(!ns.revisions){
+            $('#revision-list-msg').empty().replaceWith("No previous revisions found.");
+        }
+        else{
+            var html = "";
+            for(var i in ns.revisions){
+                var revisionDate = ns.revisions[i].timestamp;
+
+                html += '<li ';
+                // set active/inactive classes
+                if(i == ns.activeRevision){
+                    html += 'id="revision-active" ';
+                    ns.activeRevisionID = ns.revisions[i].revision_id;
+                }
+                // set approved class
+                if(ns.revisions[i].approved){
+                    html += 'class="revision-approved"';
+                }
+                else{
+                    html += 'class="revision-not-approved"';
+                }
+                html += '>';
+
+                if(i == ns.activeRevision){
+                    var commitMessage = ns.revisions[i].message;
+                    if(commitMessage === ""){
+                        commitMessage = "There was no commit message for this revision";
+                    }
+                    html += '<span id="revision-active-text">' + revisionDate +  
+                            '</span>' +
+                            '<div id="revision-list-author">' +
+                            'Author: ' + ns.revisions[i].author + '</div>' + 
+                            '<div class="revision-list-buttons">' +
+                            '<button id="revision-replace-all"' + 
+                            ' title="Replace all fields with values from this revision"></button>' +
+                            '<button id="revision-toggle-info"' + 
+                            ' title="Display the commit message for this revision"></button>' +
+                            '</div>' +
+                            '<div id="revision-commit-message">' + commitMessage + '</div>' +
+                            '<div id="revision-replace-all-warning"' +
+                            ' title="Replace all fields with values from this revision?">' +
+                            'This action will replace any changes that you have made to ' +
+                            'the package edit form with the values from this revision.' +
+                            '</div>';
+                }
+                else{
+                    html += '<a id="revision-' + i.toString() + '" ' +
+                            'class="revision-list-button">' +
+                            revisionDate +
+                            '</a>';
+                }
+                html += '</li>';
+            }
+            $('#revision-list').empty().append(html);
+            // add a click handlers for revision list URLs
+            $('a.revision-list-button').click(function(ev){
+                ns.changeRevision($(ev.target).attr('id').substr("revision-".length));
+            });
+            // add dialog for replace all confirmation box
+            $('#revision-replace-all-warning').dialog({
+                autoOpen: false,
+                resizable: false,
+                modal: true,
+                buttons: {
+                    "Replace all fields":function(){
+                        ns.replaceAllWithShadows();
+                        $(this).dialog("close");
+                    },
+                    Cancel:function(){
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            // add button and click handler for 'replace all' button
+            $('#revision-replace-all').button({
+                text: false, icons : {primary:'ui-icon-transferthick-e-w'}
+            });
+            $('#revision-replace-all').click(function(){
+                $('#revision-replace-all-warning').dialog('open');
+            });
+            // add button and click handler for info button
+            $('#revision-toggle-info').button({
+                text: false, icons : {primary:'ui-icon-info'}
+            });
+            $('#revision-toggle-info').click(function(){
+                $('#revision-commit-message').slideToggle();
+            });
+        }
     };
 
     // if all fields match, highlight the active revision in green
