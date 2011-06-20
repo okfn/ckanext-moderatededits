@@ -979,7 +979,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             // fields don't match - display shadow
             $(field).removeClass("revision-match");
             var shadowDiv = $(field).parent().next("div").empty();
-            var shadow = '<div class="shadow-value">' + shadowValue + '</div>';
+            var shadow = '<div class="shadow-value"><fieldset>' +
+                '<legend>Old Value</legend>' + shadowValue + '</fieldset></div>';
             shadowDiv.append(shadow);
             if($.trim(shadowValue) === ""){
                 shadowDiv.find(".shadow-value").append("[Empty]");
