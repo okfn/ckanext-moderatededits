@@ -453,7 +453,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             $(field).next("div").empty();
 
             // different type of shadow depending on input type
-            var shadow = '<div class="shadow-value">';
+            var shadow = '<fieldset><legend>Old Value</legend>' +
+                '<div class="shadow-value">';
             if(field.nodeName.toLowerCase() === "input"){
                 shadow += shadowValue;
             }
@@ -467,7 +468,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 // option rather than the value
                 shadow += $(field).children('option[value='+shadowValue+']').text();
             }
-            shadow += '</div>';
+            shadow += '</fieldset></div>';
             $(field).next("div").append(shadow);
 
             if(field.nodeName.toLowerCase() === "textarea"){
@@ -483,7 +484,7 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                     var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
                                  'Copy value to field</button>'
                 }
-                $(field).next("div").append(button);
+                $(field).next('div').find('fieldset').append(button);
                 $('button#shadow-replace-' + fieldName).click(ns.copyValueClicked);
                 $('button#shadow-replace-' + fieldName).button({
                     icons : {primary:'ui-icon-arrowthick-1-n'}
@@ -491,9 +492,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
 
             if($.trim(shadowValue) === ""){
-                $(field).next("div").find(".shadow-value").append("[Empty]");
+                $(field).next('div').find('.shadow-value').append("[Empty]");
             }
-            $(field).next("div").fadeIn(ns.fadeTime);
+            $(field).next('div').fadeIn(ns.fadeTime);
         }
     };
 

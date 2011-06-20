@@ -93,11 +93,18 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 #package-edit .revision-match { border: 1px solid #04ae0d; }
 #package-edit .revision-match-resources { border: 1px solid #04ae0d; }
 .shadow { 
-    border: 1px solid #f8dc30; 
-    padding: 4px;
-    margin-bottom: 0.5em;
     display: none;
     width: 30em;
+}
+.shadow fieldset {
+    border: 1px solid #f8dc30; 
+    width: 30em;
+    padding: 10px 4px 4px 4px;
+    margin-bottom: 0.5em;
+}
+.shadow fieldset legend { 
+    font-weight: normal; 
+    font-size: 1em;
 }
 .shadow button { margin-top: 1em; }
 .shadow textarea { 
