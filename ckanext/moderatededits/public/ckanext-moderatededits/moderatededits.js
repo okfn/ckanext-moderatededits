@@ -440,42 +440,77 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         shadowValue = ns.normaliseLineEndings(shadowValue);
 
         if(inputValue === shadowValue){
-            // fields match, so just set css style
-            $(field).addClass("revision-match");
-            $(field).next("div").fadeOut(ns.fadeTime, function(){
-                $(field).next("div").empty();
+            $(field).addClass('revision-match');
+            $(field).next('div.shadow').fadeOut(ns.fadeTime, function(){
+                $(field).next('div.shadow').empty();
                 ns.checkAllMatch();
             });
         }
         else{
             // fields don't match - display shadow
-            $(field).removeClass("revision-match");
-            $(field).next("div").empty();
 
-            // different type of shadow depending on input type
-            var shadow = '<fieldset><legend>Old Value</legend>' +
-                '<div class="shadow-value">';
-            if(field.nodeName.toLowerCase() === "input"){
-                shadow += shadowValue;
-            }
-            else if(field.nodeName.toLowerCase() === "textarea"){
-                var d = ns.dmp.diff_main(inputValue, shadowValue);
-                ns.dmp.diff_cleanupSemantic(d);
-                shadow += ns.dmp.diff_prettyHtml(d);
-            }
-            else if(field.nodeName.toLowerCase() === "select"){
+            if(field.nodeName.toLowerCase() === 'select'){
                 // for selects, we want to display the text for the appropriate
                 // option rather than the value
-                shadow += $(field).children('option[value='+shadowValue+']').text();
+                shadowValue = $(field).children('option[value='+shadowValue+']').text();
             }
-            shadow += '</fieldset></div>';
-            $(field).next("div").append(shadow);
 
             if(field.nodeName.toLowerCase() === "textarea"){
+                var shadowDiff = $(field).next('div.shadow').find('div.shadow-diff-content');
+                var wasVisible = false;
+                if(shadowDiff){
+                    var wasVisible = shadowDiff.is(':visible');
+                }
+            }
+
+            $(field).removeClass('revision-match');
+            $(field).next('div.shadow').empty();
+            var shadow = '<fieldset><legend>Old Value</legend>' +
+                '<div class="shadow-value">' + shadowValue + 
+                '</fieldset></div>';
+            $(field).next('div.shadow').append(shadow);
+
+            if(field.nodeName.toLowerCase() === "textarea"){
+                // add the 'show diff' link
+                var d = ns.dmp.diff_main(inputValue, shadowValue);
+                ns.dmp.diff_cleanupSemantic(d);
+                var diff = '<div class="shadow-diff">' +
+                    '<a id="shadow-diff-' + fieldName + '">' +
+                    '<img class="ui-icon ui-icon-triangle-1-e ui-inline"/> ' +
+                    'View diff</a></div>' +
+                    '<div class="shadow-diff-content">' +
+                    ns.dmp.diff_prettyHtml(d) +
+                    '</div>';
+                $(field).next('div.shadow').prepend(diff);
+
+                $('#shadow-diff-' + fieldName).click(function(){
+                    var diff = $(this).closest('div.shadow-diff').next('div.shadow-diff-content');
+                    var wasVisible = diff.is(':visible');
+                    diff.slideToggle();
+
+                    var image = $(this).find('img');
+                    if(wasVisible){
+                        image.removeClass('ui-icon-triangle-1-s');
+                        image.addClass('ui-icon-triangle-1-e');
+                    }
+                    else{
+                        image.removeClass('ui-icon-triangle-1-e');
+                        image.addClass('ui-icon-triangle-1-s');
+                    }
+                });
+
+                var image = $(field).next('div.shadow').find('div.shadow-diff').find('img');
+                if(wasVisible){
+                    $(field).next('div.shadow').find('div.shadow-diff-content').show();
+                    image.removeClass('ui-icon-triangle-1-e');
+                    image.addClass('ui-icon-triangle-1-s');
+                }
+                else{
+                    image.removeClass('ui-icon-triangle-1-s');
+                    image.addClass('ui-icon-triangle-1-e');
+                }
+
                 // add the 'copy to field' button
-                //
-                // if the revision value was an empty string, display a different message
-                // on the button
                 if($.trim(shadowValue) === ""){
                     var button = '<button type="button" id="shadow-replace-' + fieldName + '">' +
                                  'Clear this field</button>'
@@ -492,9 +527,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             }
 
             if($.trim(shadowValue) === ""){
-                $(field).next('div').find('.shadow-value').append("[Empty]");
+                $(field).next('div.shadow').find('.shadow-value').append("[Empty]");
             }
-            $(field).next('div').fadeIn(ns.fadeTime);
+            $(field).next('div.shadow').fadeIn(ns.fadeTime);
         }
     };
 

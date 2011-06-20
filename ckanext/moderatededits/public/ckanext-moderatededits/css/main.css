@@ -115,6 +115,16 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 }
 .shadow-value-short { width: 11em; }
 .shadow-value-medium { width: 25em; }
+.shadow .shadow-diff {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.shadow img.ui-icon { display: inline; }
+.shadow-diff a { cursor: pointer; }
+.shadow-diff-content { 
+    display: none; 
+    margin-bottom: 1em; 
+}
 .resources-shadow td { 
     background-color: #fff;
     vertical-align: top;
