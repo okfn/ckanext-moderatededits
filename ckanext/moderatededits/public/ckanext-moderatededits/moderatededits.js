@@ -33,9 +33,9 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         else{
             // remove read-only fields
             var dt = $('#basic-information label[for="name"]').parent();
-            dt.nextUntil('dt').remove();
-            dt.remove();
-            $('#groups').remove();
+            dt.nextUntil('dt').hide();
+            dt.hide();
+            $('#groups').hide();
             // hide revision list
             $('#revision-list-widget').hide();
             // make editor 'use last approved values' button
