@@ -19,6 +19,17 @@ BODY_CODE = """
 REVISION_INFO_CODE = """
 <div id="revision-info" class="revision-box">
     <ul>
+        <li id="revision-info-editor">
+            <span class="revision-info-item">
+                Someone else has already started editing this form. 
+                You can continue editing from where they left off by editing the form below 
+                or start a new form using the currently values. 
+                
+                <button id="revision-info-editor-reset" type="button">
+                Start a new form using the currently accepted values
+                </button>
+            </span>
+        </li>
         <li id="revision-info-moderator">
             <span class="revision-info-item">
                 You are a moderator for this package.

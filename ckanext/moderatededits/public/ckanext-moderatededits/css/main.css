@@ -26,6 +26,8 @@
     display: block;
     padding: 10px;
 }
+#revision-info-editor { display: none }
+#revision-info-editor-reset { margin-top: 1em; }
 #revision-info-moderator { display: none }
 #revision-info-link-to-latest { display: none }
 #revision-moderator-info { 

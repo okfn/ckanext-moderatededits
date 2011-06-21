@@ -38,6 +38,27 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             $('#groups').remove();
             // hide revision list
             $('#revision-list-widget').hide();
+            // make editor 'use last approved values' button
+            $('#revision-info-editor-reset').click(function(){
+                ns.showEditorInfo = false;
+                ns.changeRevision(ns.lastApproved);
+                ns.replaceAllWithShadows();
+            });
+            // $('#revision-info-editor-warning').dialog({
+            //     autoOpen: false,
+            //     resizable: false,
+            //     modal: true,
+            //     buttons: {
+            //         "Replace all fields":function(){
+            //             ns.changeRevision(ns.lastApproved);
+            //             ns.replaceAllWithShadows();
+            //             $(this).dialog("close");
+            //         },
+            //         Cancel:function(){
+            //             $(this).dialog("close");
+            //         }
+            //     }
+            // });
         }
         // change default preview/submit buttons to match style
         $('.submit input[name="preview"]').button(); 
@@ -60,6 +81,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         ns.activeRevisionID = null;
         ns.revisions = null;
         ns.lastApproved = 0;
+        ns.checkedForEditor = false;
+        ns.showEditorInfo = false;
         ns.formInputs = {}
         ns.formInputTypes = {};
         ns.extrasFormInputs = [];
@@ -113,23 +136,36 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
 
     // display the revision information box
     ns.revisionInfo = function(){
+        var showInfoBox = false;
+
         if(ns.isModerator){
             $('#revision-info-moderator').fadeIn(ns.fadeTime);
+            showInfoBox = true;
+
+            if(ns.activeRevision != ns.lastApproved){
+                $('#revision-info-link-to-latest').fadeIn(ns.fadeTime);
+            }
+            else{
+                $('#revision-info-link-to-latest').fadeOut(ns.fadeTime);
+            }
         }
         else{
-            $('#revision-info-moderator').fadeOut(ns.fadeTime);
+            if(!ns.checkedForEditor){
+                if(ns.activeRevision != ns.lastApproved){
+                    $('#revision-info-editor').fadeIn(ns.fadeTime);
+                    showInfoBox = true;
+                    ns.checkedForEditor = true;
+                    ns.showEditorInfo = true;
+                }
+            }
+            else{
+                if(ns.showEditorInfo){
+                    showInfoBox = true;
+                }
+            }
         }
 
-        ns.lastApproved = ns.lastApprovedRevision()
-        if(ns.activeRevision != ns.lastApproved){
-            $('#revision-info-link-to-latest').fadeIn(ns.fadeTime);
-        }
-        else{
-            $('#revision-info-link-to-latest').fadeOut(ns.fadeTime);
-        }
-
-        // test for both to decide whether to hide the whole revision info box or not
-        if(ns.isModerator || (ns.activeRevision != ns.lastApproved)){
+        if(showInfoBox){
             $('#revision-info').fadeIn(ns.fadeTime);
         }
         else{
@@ -152,6 +188,10 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
                 if(i == ns.activeRevision){
                     ns.activeRevisionID = ns.revisions[i].revision_id;
                 }
+            }
+            ns.lastApproved = ns.lastApprovedRevision()
+            if(!ns.isModerator){
+                ns.activeRevision = ns.lastApproved;
             }
             ns.changeRevision(ns.activeRevision);
         };
