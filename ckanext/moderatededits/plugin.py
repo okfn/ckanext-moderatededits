@@ -76,8 +76,8 @@ class ModeratedEditsPlugin(SingletonPlugin):
         routes = request.environ.get('pylons.routes_dict')
 
         # if this is the edit action of a package, call the javascript init function
-        if(routes.get('controller') == 'package' and
-           routes.get('action') == 'edit' and 
+        controllers = ['package', 'ckanext.catalog.controller:CatalogController']
+        if(routes.get('controller') in controllers and routes.get('action') == 'edit' and 
            c.pkg.id):
             data = {'package_name': c.pkg.name,
                     'revision_list_url': h.url_for(controller='package', action='history_ajax',
