@@ -1177,32 +1177,34 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
         }
 
         // check for extras removed since shadow revision
-        var lastLabel = $('#extras-added-list').find('dt:last').find('label');
-        var n = parseInt(lastLabel.attr('for').charAt("extras__".length), 10) + 1;
         var extrasRemoved = "";
-        for(var i in ns.shadowExtras){
-            if(extras[i] === undefined){
-                var keyName = "extras__" + n + "__key";
-                var valueName = "extras__" + n + "__value";
-                var deletedName = "extras__" + n + "__deleted";
-                extrasRemoved += '<dt class="extras-dt ' + i + '">' +
-                    '<label for="' + valueName +'">' + i + '</label></dt>' +
-                    '<dd class="extras-dd ' + i + '">' +
-                    '<input id="' + keyName + '" name="' + keyName + '" ' +
-                    'type="hidden" value="' + i + '">' +
-                    '<div class="extras-value">' +
-                    '<input id="' + valueName + '" name="' + valueName + '" ' +
-                    'type="text" value="' + ns.shadowExtras[i].value + '">' +
-                    '</div>' +
-                    '<div class="shadow">' +
-                    '<div class="shadow-value">' + ns.shadowExtras[i].value + 
-                    '<div><button type="button">Add</button></div>' +
-                    '</div>' +
-                    '</div>' +
-                    '<div class="extras-delete">' +
-                    '<input type="checkbox" name="' + deletedName + '"> Delete' +
-                    '</div>' +
-                    '</dd>';
+        var lastLabel = $('#extras-added-list').find('dt:last').find('label');
+        if(lastLabel.length){
+            var n = parseInt(lastLabel.attr('for').charAt("extras__".length), 10) + 1;
+            for(var i in ns.shadowExtras){
+                if(extras[i] === undefined){
+                    var keyName = "extras__" + n + "__key";
+                    var valueName = "extras__" + n + "__value";
+                    var deletedName = "extras__" + n + "__deleted";
+                    extrasRemoved += '<dt class="extras-dt ' + i + '">' +
+                        '<label for="' + valueName +'">' + i + '</label></dt>' +
+                        '<dd class="extras-dd ' + i + '">' +
+                        '<input id="' + keyName + '" name="' + keyName + '" ' +
+                        'type="hidden" value="' + i + '">' +
+                        '<div class="extras-value">' +
+                        '<input id="' + valueName + '" name="' + valueName + '" ' +
+                        'type="text" value="' + ns.shadowExtras[i].value + '">' +
+                        '</div>' +
+                        '<div class="shadow">' +
+                        '<div class="shadow-value">' + ns.shadowExtras[i].value + 
+                        '<div><button type="button">Add</button></div>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="extras-delete">' +
+                        '<input type="checkbox" name="' + deletedName + '"> Delete' +
+                        '</div>' +
+                        '</dd>';
+                }
             }
         }
         if(extrasRemoved != ""){
