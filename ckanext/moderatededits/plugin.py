@@ -79,10 +79,19 @@ class ModeratedEditsPlugin(SingletonPlugin):
         controllers = ['package', 'ckanext.catalog.controller:CatalogController']
         if(routes.get('controller') in controllers and routes.get('action') == 'edit' and 
            c.pkg.id):
-            data = {'package_name': c.pkg.name,
-                    'revision_list_url': h.url_for(controller='package', action='history_ajax',
-                                                   id=c.pkg.id),
-                    'revision_data_url': h.url_for(controller='package', action='read_ajax')}
+            if routes.get('controller') == 'package':
+                data = {'package_name': c.pkg.name,
+                        'revision_list_url': h.url_for(controller='package', action='history_ajax',
+                                                       id=c.pkg.id),
+                        'revision_data_url': h.url_for(controller='package', action='read_ajax')}
+            else:
+                data = {'package_name': c.pkg.name,
+                        'revision_list_url': h.url_for(controller='ckanext.catalog.controller:CatalogController', 
+                                                       action='history_ajax',
+                                                       id=c.pkg.id),
+                        'revision_data_url': h.url_for(controller='ckanext.catalog.controller:CatalogController', 
+                                                       action='read_ajax')}
+
             # add CSS style
             stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
             # add javascript links
