@@ -66,6 +66,9 @@ class ModeratedEditsPlugin(SingletonPlugin):
         """
         Setup routing.
         """
+        map.connect('pending_edits', '/api/2/moderatededits/has_pending/{user}',
+            controller='ckanext.moderatededits.controller:ModeratedEditsController',
+            action='has_pending')
         return map
 
     def filter(self, stream):
@@ -73,6 +76,14 @@ class ModeratedEditsPlugin(SingletonPlugin):
         Required to implement IGenshiStreamFilter.
         """
         routes = request.environ.get('pylons.routes_dict')
+
+        # get any notifications
+        notification_data = {
+                'url': h.url_for(controller='ckanext.moderatededits.controller:ModeratedEditsController', 
+                    action='has_pending', user=c.user
+                )
+        }
+        stream = stream | Transformer('body').append(HTML(html.NOTIFICATIONS % notification_data))
 
         # if this is the edit action of a package, call the javascript init function
         controllers = ['package', 'ckanext.catalog.controller:CatalogController']
@@ -92,15 +103,15 @@ class ModeratedEditsPlugin(SingletonPlugin):
                                                        action='read_ajax')}
 
             # add CSS style
-            stream = stream | Transformer('head').append(HTML(html.HEAD_CODE))
+            stream = stream | Transformer('head').append(HTML(html.HEAD))
             # add javascript links
-            stream = stream | Transformer('body').append(HTML(html.BODY_CODE % data))
+            stream = stream | Transformer('body').append(HTML(html.BODY % data))
             # add revision/moderator info boxes
             stream = stream | Transformer('body//div[@class="package"]/h2[1]')\
-                .after(HTML(html.REVISION_INFO_CODE))
+                .after(HTML(html.REVISION_INFO))
             # add revision list widget
             stream = stream | Transformer('body//div[@id="primary"]/ul')\
-                .append(HTML(html.REVISION_LIST_CODE))
+                .append(HTML(html.REVISION_LIST))
 
         # if this is the read action of a user page, show packages being followed
         elif(routes.get('controller') == 'user' and
@@ -120,8 +131,10 @@ class ModeratedEditsPlugin(SingletonPlugin):
                     if i < len(moderated_packages) - 1:
                         mod_html += ', '
                 mod_html += '</li>'
-                pending = [pkg for pkg in moderated_packages if pkg.state == 'pending']
-                mod_html += '<li id="num-pending"><strong>Number of moderated packages ' +\
+                pending = [pkg for pkg in moderated_packages \
+                    if not bool(pkg.latest_related_revision.approved_timestamp)]
+                mod_html += '<a name="num_pending"></a>'
+                mod_html += '<li><strong>Number of moderated packages ' +\
                     'with pending changes:</strong> '
                 mod_html += str(len(pending)) + '</li>'
                 if pending:

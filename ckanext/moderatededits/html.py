@@ -1,11 +1,11 @@
-HEAD_CODE = """
+HEAD = """
 <link rel="stylesheet" href="/ckanext-moderatededits/css/main.css" 
       type="text/css" media="screen" /> 
 <link rel="stylesheet" href="/ckanext-moderatededits/css/jquery-ui-1.8.13.custom.css" 
       type="text/css" media="screen" /> 
 """
 
-BODY_CODE = """
+BODY = """
 <script type="text/javascript" src="/ckanext-moderatededits/jquery-ui-1.8.13.custom.min.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/diff_match_patch.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/moderatededits.js"></script>
@@ -16,7 +16,14 @@ BODY_CODE = """
 </script>
 """
 
-REVISION_INFO_CODE = """
+NOTIFICATIONS = """
+<script type="text/javascript" src="/ckanext-moderatededits/me-notifications.js"></script>
+<script type="text/javascript">
+    CKANEXT.MODERATEDEDITS.checkNotifications('%(url)s');
+</script>
+"""
+
+REVISION_INFO = """
 <div id="revision-info" class="revision-box">
     <ul>
         <li id="revision-info-editor">
@@ -55,7 +62,7 @@ REVISION_INFO_CODE = """
 </div>
 """
 
-REVISION_LIST_CODE = """
+REVISION_LIST = """
 <div id="revision-list-widget" class="revision-box">
     <h3>Revisions</h3>
     <ul id="revision-list-new-revision">
@@ -67,15 +74,5 @@ REVISION_LIST_CODE = """
         Revisions that have been approved by the moderator are marked with a 
         <span class="revision-approved-marker">*</span>
     </div>
-</div>
-"""
-
-RESOURCES_ADDED_CODE = """
-<div id="resources-added">
-    <h3>Resources Added</h3>
-    <table>
-        <tbody>
-        </tbody>
-    </table>
 </div>
 """
