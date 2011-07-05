@@ -78,12 +78,13 @@ class ModeratedEditsPlugin(SingletonPlugin):
         routes = request.environ.get('pylons.routes_dict')
 
         # get any notifications
-        notification_data = {
-                'url': h.url_for(controller='ckanext.moderatededits.controller:ModeratedEditsController', 
-                    action='has_pending', user=c.user
-                )
-        }
-        stream = stream | Transformer('body').append(HTML(html.NOTIFICATIONS % notification_data))
+        if c.user:
+            notification_data = {
+                    'url': h.url_for(controller='ckanext.moderatededits.controller:ModeratedEditsController', 
+                        action='has_pending', user=c.user
+                    )
+            }
+            stream = stream | Transformer('body').append(HTML(html.NOTIFICATIONS % notification_data))
 
         # if this is the edit action of a package, call the javascript init function
         controllers = ['package', 'ckanext.catalog.controller:CatalogController']

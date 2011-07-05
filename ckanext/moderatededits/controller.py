@@ -38,10 +38,7 @@ class ModeratedEditsController(BaseController):
 
         packages = get_moderated_packages(c)
         for p in packages:
-            # if p.state == 'pending':
             if not bool(p.latest_related_revision.approved_timestamp):
-                log.info(p.name)
-                log.info(p.latest_related_revision.approved_timestamp)
                 return {'result': 'true'}
 
         return {'result': 'false'}
