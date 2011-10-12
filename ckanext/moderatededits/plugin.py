@@ -79,7 +79,8 @@ class ModeratedEditsPlugin(SingletonPlugin):
 
         # get any notifications
         #
-        # TODO: the query called by this function needs to be speeded up
+        # TODO: the query called by this function needs to be speeded up before it can be called on every
+        #       page load
         #
         # if c.user:
         #     notification_data = {
@@ -123,26 +124,26 @@ class ModeratedEditsPlugin(SingletonPlugin):
              c.user):
             moderated_packages = controller.get_moderated_packages(c)
             mod_html = '<div class="moderation"><h3>Package Moderation</h3><ul>'
-            mod_html += '<li><strong>Number of packages moderated:</strong> ' +\
-                str(len(moderated_packages))
-            mod_html += '</li>'
+            # mod_html += '<li><strong>Number of packages moderated:</strong> ' +\
+            #     str(len(moderated_packages))
+            # mod_html += '</li>'
             if moderated_packages:
-                mod_html += '<li><strong>Moderated packages:</strong> '
-                for i, pkg in enumerate(moderated_packages):
-                    mod_html += str(h.link_to(pkg.name, h.url_for(
-                        controller='package', action='read', id=pkg.name
-                    ))) 
-                    if i < len(moderated_packages) - 1:
-                        mod_html += ', '
-                mod_html += '</li>'
+                # mod_html += '<li><strong>Moderated packages:</strong> '
+                # for i, pkg in enumerate(moderated_packages):
+                #     mod_html += str(h.link_to(pkg.name, h.url_for(
+                #         controller='ckanext.datacatalogs.controller:DataCatalogsController', 
+                #         action='read', id=pkg.name
+                #     ))) 
+                #     if i < len(moderated_packages) - 1:
+                #         mod_html += ', '
+                # mod_html += '</li>'
                 pending = [pkg for pkg in moderated_packages \
                     if not bool(pkg.latest_related_revision.approved_timestamp)]
                 mod_html += '<a name="num_pending"></a>'
-                mod_html += '<li><strong>Number of moderated packages ' +\
-                    'with pending changes:</strong> '
-                mod_html += str(len(pending)) + '</li>'
+                # mod_html += '<li><strong>Number of pending changes:</strong> '
+                # mod_html += str(len(pending)) + '</li>'
                 if pending:
-                    mod_html += '<li><strong>Packages with pending changes:</strong> '
+                    mod_html += '<li><strong>Pending changes:</strong> '
                     for n, p in enumerate(pending):
                         mod_html += str(h.link_to(p.name, h.url_for(
                             controller='package', action='edit', id=p.name
@@ -150,6 +151,5 @@ class ModeratedEditsPlugin(SingletonPlugin):
                         if n < len(pending) - 1:
                             mod_html += ', '
             mod_html += '</ul></div>'
-            stream = stream | Transformer('body//div[@class="activity"]//ul')\
-                .after(HTML(mod_html))
+            stream = stream | Transformer('body//div[@id="sidebar"]').append(HTML(mod_html))
         return stream
