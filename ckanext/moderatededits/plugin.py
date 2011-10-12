@@ -78,16 +78,19 @@ class ModeratedEditsPlugin(SingletonPlugin):
         routes = request.environ.get('pylons.routes_dict')
 
         # get any notifications
-        if c.user:
-            notification_data = {
-                    'url': h.url_for(controller='ckanext.moderatededits.controller:ModeratedEditsController', 
-                        action='has_pending', user=c.user
-                    )
-            }
-            stream = stream | Transformer('body').append(HTML(html.NOTIFICATIONS % notification_data))
+        #
+        # TODO: the query called by this function needs to be speeded up
+        #
+        # if c.user:
+        #     notification_data = {
+        #             'url': h.url_for(controller='ckanext.moderatededits.controller:ModeratedEditsController', 
+        #                 action='has_pending', user=c.user
+        #             )
+        #     }
+        #     stream = stream | Transformer('body').append(HTML(html.NOTIFICATIONS % notification_data))
 
         # if this is the edit action of a package, call the javascript init function
-        controllers = ['package', 'ckanext.catalog.controller:CatalogController']
+        controllers = ['package', 'ckanext.datacatalogs.controller:DataCatalogsController']
         if(routes.get('controller') in controllers and routes.get('action') == 'edit' and 
            c.pkg.id):
             if routes.get('controller') == 'package':
@@ -97,10 +100,10 @@ class ModeratedEditsPlugin(SingletonPlugin):
                         'revision_data_url': h.url_for(controller='package', action='read_ajax')}
             else:
                 data = {'package_name': c.pkg.name,
-                        'revision_list_url': h.url_for(controller='ckanext.catalog.controller:CatalogController', 
+                        'revision_list_url': h.url_for(controller='ckanext.datacatalogs.controller:DataCatalogsController', 
                                                        action='history_ajax',
                                                        id=c.pkg.id),
-                        'revision_data_url': h.url_for(controller='ckanext.catalog.controller:CatalogController', 
+                        'revision_data_url': h.url_for(controller='ckanext.datacatalogs.controller:DataCatalogsController', 
                                                        action='read_ajax')}
 
             # add CSS style
@@ -111,10 +114,10 @@ class ModeratedEditsPlugin(SingletonPlugin):
             stream = stream | Transformer('body//div[@class="package"]/h2[1]')\
                 .after(HTML(html.REVISION_INFO))
             # add revision list widget
-            stream = stream | Transformer('body//div[@id="primary"]/ul')\
+            stream = stream | Transformer('body//div[@id="sidebar"]/ul')\
                 .append(HTML(html.REVISION_LIST))
 
-        # if this is the read action of a user page, show packages being followed
+        # if this is the read action of a user page, show packages with pending edits
         elif(routes.get('controller') == 'user' and
              routes.get('action') == 'read' and 
              c.user):

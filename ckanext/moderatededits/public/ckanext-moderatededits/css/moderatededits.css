@@ -53,8 +53,11 @@
     color: #000;
     margin-bottom: 1em;
 }
+#revision-list { 
+    margin: 0; 
+    padding: 0; 
+}
 #revision-list li { width: 165px; }
-#revision-list { margin: 0; }
 #revision-list button { 
     margin: 0 1em 0 0; 
     padding: 5px 25px 5px 5px;
@@ -76,6 +79,7 @@ li.revision-not-approved { padding: 10px 15px 10px 15px; }
 #revision-list-new-revision {
     display: none;
 }
+#revision-list-new-revision { padding: 0 }
 #revision-list-new-revision li {
     padding: 10px 15px 10px 15px; 
     border: 1px solid #e7e7e7; 

@@ -1,12 +1,11 @@
 HEAD = """
-<link rel="stylesheet" href="/ckanext-moderatededits/css/main.css" 
+<link rel="stylesheet" href="/ckanext-moderatededits/css/moderatededits.css" 
       type="text/css" media="screen" /> 
 <link rel="stylesheet" href="/ckanext-moderatededits/css/jquery-ui-1.8.13.custom.css" 
       type="text/css" media="screen" /> 
 """
 
 BODY = """
-<script type="text/javascript" src="/ckanext-moderatededits/jquery-ui-1.8.13.custom.min.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/diff_match_patch.js"></script>
 <script type="text/javascript" src="/ckanext-moderatededits/moderatededits.js"></script>
 <script type="text/javascript">
