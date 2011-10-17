@@ -60,8 +60,8 @@ CKANEXT.MODERATEDEDITS = CKANEXT.MODERATEDEDITS || {};
             //     }
             // });
         }
-        // change default preview/submit buttons to match style
-        $('.submit input[name="preview"]').button(); 
+        // change default cancel/submit buttons to match style
+        $('.submit input[name="cancel"]').button(); 
         $('.submit input[name="save"]').button(); 
 
         // Add the 'resources added' and 'resources removed' sections
